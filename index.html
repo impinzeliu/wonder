@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wonder 朗讀特訓站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141B33;
+    --bg-deep:#0F1526;
+    --panel:#1E2A4D;
+    --panel-soft:#243259;
+    --line:#33437A;
+    --gold:#E8B84B;
+    --gold-soft:#F4D889;
+    --cream:#F3EFE4;
+    --dim:#A9B4D0;
+    --coral:#E0785A;
+    --blue:#6F9AC4;
+    --green:#7FBE8C;
+    --red:#E06868;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:radial-gradient(ellipse at top, #1B2647 0%, var(--bg-deep) 65%);
+    color:var(--cream);
+    font-family:'Nunito Sans', -apple-system, sans-serif;
+    min-height:100vh;
+  }
+  .stars-bg{
+    position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background-image:
+      radial-gradient(1.5px 1.5px at 10% 20%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 80% 10%, #fff, transparent),
+      radial-gradient(1px 1px at 40% 70%, #fff, transparent),
+      radial-gradient(1px 1px at 90% 60%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 60% 30%, #fff, transparent),
+      radial-gradient(1px 1px at 25% 85%, #fff, transparent),
+      radial-gradient(1px 1px at 70% 90%, #fff, transparent);
+    background-size:100% 100%;
+  }
+  .wrap{ position:relative; z-index:1; max-width:760px; margin:0 auto; padding:28px 18px 60px; }
+  header.top{ text-align:center; margin-bottom:22px; }
+  .eyebrow-free{ color:var(--gold); font-size:14px; font-weight:700; letter-spacing:.02em; }
+  h1.title{
+    font-family:'Fraunces', serif; font-weight:600; font-size:32px; line-height:1.2;
+    margin:6px 0 4px; color:var(--cream);
+  }
+  .subtitle{ color:var(--dim); font-size:15px; margin:0; }
+
+  .stat-row{ display:flex; gap:10px; justify-content:center; margin:18px 0 6px; flex-wrap:wrap; }
+  .stat-chip{
+    background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:8px 16px; font-size:13px; color:var(--dim); display:flex; align-items:center; gap:6px;
+  }
+  .stat-chip b{ color:var(--gold-soft); font-size:15px; }
+
+  nav.tabs{
+    display:flex; gap:6px; margin:22px 0 20px; background:var(--bg-deep);
+    border-radius:999px; padding:5px; border:1px solid var(--line); overflow-x:auto;
+  }
+  nav.tabs button{
+    flex:1; white-space:nowrap; background:transparent; border:none; color:var(--dim);
+    font-family:inherit; font-size:13.5px; font-weight:700; padding:10px 10px; border-radius:999px;
+    cursor:pointer; transition:background .15s, color .15s;
+  }
+  nav.tabs button.active{ background:var(--gold); color:#2A1E05; }
+  nav.tabs button:not(.active):hover{ background:var(--panel-soft); color:var(--cream); }
+
+  section.tab{ display:none; animation:fade .25s ease; }
+  section.tab.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
+  h2.h{ font-family:'Fraunces', serif; font-weight:600; font-size:20px; margin:0 0 10px; color:var(--gold-soft); }
+  p.p{ color:var(--dim); font-size:14.5px; line-height:1.7; margin:0 0 12px; }
+
+  /* home / star map */
+  .starmap{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin:14px 0 6px; }
+  .day{
+    aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; font-size:12px; font-weight:800; color:var(--dim); background:var(--bg-deep); border:1px solid var(--line);
+    position:relative; cursor:pointer; padding:2px;
+  }
+  .day:hover{ border-color:var(--blue); }
+  .day.done{ background:linear-gradient(160deg, var(--gold), #C98A22); color:#2A1E05; border-color:var(--gold); }
+  .day.today{ box-shadow:0 0 0 2px var(--coral); }
+  .day.selected{ box-shadow:0 0 0 2px var(--blue); }
+  .day.assessed::after{
+    content:''; position:absolute; top:3px; right:3px; width:7px; height:7px; border-radius:50%;
+    background:var(--green); box-shadow:0 0 0 1.5px var(--bg-deep);
+  }
+  .day-date{ font-size:8.5px; font-weight:700; opacity:.85; }
+  .legend{ display:flex; gap:16px; font-size:12.5px; color:var(--dim); margin-top:10px; flex-wrap:wrap; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  /* day detail panel */
+  .day-detail{ background:var(--bg-deep); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:14px; }
+  .day-detail .dd-head{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+  .day-detail .dd-title{ font-family:'Fraunces', serif; font-size:17px; color:var(--gold-soft); }
+  .day-detail .dd-date{ font-size:12.5px; color:var(--dim); }
+  .day-detail .dd-status{ font-size:12px; font-weight:800; padding:3px 10px; border-radius:999px; }
+  .day-detail .dd-status.pass{ background:rgba(127,190,140,.18); color:var(--green); }
+  .day-detail .dd-status.pending{ background:rgba(169,180,208,.15); color:var(--dim); }
+  .check-item{
+    display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;
+  }
+  .check-item:last-child{ border-bottom:none; }
+  .check-box{
+    flex-shrink:0; width:20px; height:20px; border-radius:6px; border:1px solid var(--line); background:var(--panel);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; color:var(--green); margin-top:1px;
+  }
+  .check-box.checked{ background:var(--green); border-color:var(--green); color:#0F2914; }
+  .check-label{ color:var(--cream); line-height:1.5; flex:1; }
+  .check-label.struck{ color:var(--dim); text-decoration:line-through; }
+  .mini-quiz{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:6px; }
+  .mini-quiz .mq-q{ font-family:'Fraunces', serif; font-size:15px; margin-bottom:8px; }
+  .mini-quiz .quiz-opts{ gap:7px; }
+  .mini-quiz .opt-btn{ padding:9px 12px; font-size:13.5px; }
+
+  /* recorder */
+  .rec-widget{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:6px; }
+  .rec-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .rec-btn{
+    font-family:inherit; font-weight:800; font-size:13px; padding:9px 16px; border-radius:999px; border:1px solid var(--coral);
+    background:var(--coral); color:#3A1206; cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .rec-btn.recording{ background:var(--red); border-color:var(--red); animation:pulse 1.2s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.6;} }
+  .rec-dot{ width:9px; height:9px; border-radius:50%; background:#3A1206; display:inline-block; }
+  .rec-status{ font-size:12.5px; color:var(--dim); }
+  .rec-audio{ margin-top:10px; width:100%; }
+  .rec-note{ font-size:11.5px; color:var(--dim); margin-top:6px; }
+  .latest-rec-card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-top:6px; }
+  .latest-rec-card .lr-label{ font-size:12.5px; color:var(--dim); margin-bottom:6px; }
+
+  /* listen 3x task */
+  .listen-steps{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .listen-btn{
+    font-family:inherit; font-weight:800; font-size:12.5px; padding:8px 14px; border-radius:999px;
+    border:1px solid var(--line); background:var(--bg-deep); color:var(--dim); cursor:pointer;
+  }
+  .listen-btn.ready{ border-color:var(--blue); color:var(--cream); }
+  .listen-btn.done{ border-color:var(--green); color:var(--green); background:rgba(127,190,140,.12); cursor:default; }
+  .listen-btn:disabled{ opacity:.5; cursor:default; }
+
+  .badges-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+  .badge{ background:var(--bg-deep); border:1px solid var(--line); border-radius:10px; padding:12px; text-align:center; opacity:.4; }
+  .badge.unlocked{ opacity:1; border-color:var(--gold); background:var(--panel-soft); }
+  .badge .bicon{ font-size:26px; display:block; margin-bottom:6px; }
+  .badge .bname{ font-size:12.5px; font-weight:800; color:var(--cream); }
+  .badge .bdesc{ font-size:11px; color:var(--dim); margin-top:2px; }
+
+  /* text practice */
+  .line-row{
+    display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--line);
+  }
+  .line-row:last-child{ border-bottom:none; }
+  .line-num{ color:var(--dim); font-size:12px; font-weight:800; min-width:20px; padding-top:6px; }
+  .line-en{
+    font-family:'Fraunces', serif; font-size:17px; line-height:1.55; color:var(--cream); flex:1;
+  }
+  .line-zh{ font-size:13px; color:var(--dim); margin-top:4px; }
+  .line-actions{ display:flex; gap:8px; flex-shrink:0; }
+  .icon-btn{
+    background:var(--bg-deep); border:1px solid var(--line); color:var(--gold-soft); border-radius:8px;
+    width:34px; height:34px; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn:hover{ background:var(--panel-soft); }
+  .icon-btn.on{ background:var(--green); color:#0F2914; border-color:var(--green); }
+  .icon-btn.recording{ background:var(--red); color:#fff; border-color:var(--red); animation:pulse 1.2s infinite; }
+  .line-row.highlight{ background:var(--panel-soft); border-radius:10px; padding-left:10px; padding-right:10px; }
+
+  .controls-row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:13.5px; padding:10px 18px; border-radius:10px;
+    border:1px solid var(--gold); background:var(--gold); color:#2A1E05; cursor:pointer;
+  }
+  button.btn.secondary{ background:transparent; color:var(--gold-soft); }
+  button.btn.small{ padding:7px 12px; font-size:12.5px; }
+  button.btn:disabled{ opacity:.5; cursor:default; }
+  .rate-wrap{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--dim); }
+  input[type=range]{ accent-color:var(--gold); width:110px; }
+
+  /* vocab */
+  .vocab-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+  .vcard{
+    background:var(--bg-deep); border:1px solid var(--line); border-radius:12px; padding:14px;
+    cursor:pointer; perspective:800px; min-height:118px; display:flex; flex-direction:column; justify-content:center;
+  }
+  .vcard.known{ border-color:var(--green); }
+  .vcard .vword{ font-family:'Fraunces', serif; font-size:19px; color:var(--gold-soft); }
+  .vcard .vphon{ font-size:12.5px; color:var(--dim); margin-top:2px; }
+  .vcard .vmeaning{ display:none; font-size:14px; color:var(--cream); margin-top:8px; }
+  .vcard.flipped .vmeaning{ display:block; }
+  .vcard.flipped .vword{ font-size:15px; color:var(--dim); }
+  .vcard-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+  .vcard-foot .icon-btn{ width:28px; height:28px; font-size:13px; }
+  .vknown-tag{ font-size:10.5px; color:var(--green); font-weight:800; }
+
+  /* games */
+  .game-menu{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+  .game-tile{
+    background:var(--bg-deep); border:1px solid var(--line); border-radius:12px; padding:16px; cursor:pointer; text-align:left;
+  }
+  .game-tile:hover{ border-color:var(--gold); }
+  .game-tile .gicon{ font-size:26px; }
+  .game-tile .gname{ font-family:'Fraunces', serif; font-size:16px; margin:8px 0 4px; color:var(--cream); }
+  .game-tile .gdesc{ font-size:12px; color:var(--dim); }
+  .game-tile .gbest{ font-size:11px; color:var(--gold-soft); margin-top:6px; font-weight:800; }
+
+  .quiz-progress{ font-size:12.5px; color:var(--dim); margin-bottom:8px; }
+  .quiz-q{ font-family:'Fraunces', serif; font-size:19px; color:var(--cream); margin-bottom:16px; line-height:1.5; }
+  .quiz-opts{ display:grid; gap:10px; }
+  .opt-btn{
+    text-align:left; background:var(--bg-deep); border:1px solid var(--line); color:var(--cream);
+    padding:12px 14px; border-radius:10px; font-family:inherit; font-size:14.5px; cursor:pointer;
+  }
+  .opt-btn:hover{ border-color:var(--blue); }
+  .opt-btn.correct{ background:rgba(127,190,140,.18); border-color:var(--green); }
+  .opt-btn.wrong{ background:rgba(224,104,104,.18); border-color:var(--red); }
+  .opt-btn:disabled{ cursor:default; }
+
+  .match-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .match-card{
+    aspect-ratio:1; background:var(--bg-deep); border:1px solid var(--line); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; text-align:center; font-size:12.5px;
+    padding:6px; cursor:pointer; color:var(--cream); font-weight:700;
+  }
+  .match-card.flipped{ background:var(--panel-soft); border-color:var(--blue); }
+  .match-card.matched{ background:rgba(127,190,140,.18); border-color:var(--green); color:var(--green); cursor:default; }
+
+  .order-list{ display:flex; flex-direction:column; gap:8px; }
+  .order-item{
+    background:var(--bg-deep); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    font-family:'Fraunces', serif; font-size:14.5px; display:flex; gap:10px; align-items:center;
+  }
+  .order-item .updown{ display:flex; flex-direction:column; gap:2px; }
+  .order-item .updown button{
+    background:none; border:1px solid var(--line); color:var(--dim); border-radius:5px; width:22px; height:18px;
+    font-size:10px; cursor:pointer;
+  }
+  .order-item.correct{ border-color:var(--green); }
+
+  .result-banner{
+    text-align:center; padding:24px; background:var(--panel-soft); border-radius:12px; margin-top:12px;
+  }
+  .result-banner .score{ font-family:'Fraunces', serif; font-size:30px; color:var(--gold-soft); }
+  .result-banner p{ color:var(--dim); font-size:14px; margin:6px 0 14px; }
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--gold); color:#2A1E05; padding:10px 20px; border-radius:999px; font-weight:800;
+    font-size:13.5px; z-index:50; box-shadow:0 6px 20px rgba(0,0,0,.35); opacity:0; pointer-events:none;
+    transition:opacity .25s, transform .25s;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+
+  ::-webkit-scrollbar{ height:6px; }
+
+  @media(max-width:480px){
+    .starmap{ grid-template-columns:repeat(5,1fr); }
+    .match-grid{ grid-template-columns:repeat(3,1fr); }
+    h1.title{ font-size:26px; }
+  }
+</style>
+</head>
+<body>
+<div class="stars-bg"></div>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow-free">珩天文化國際英語朗誦節 · 散文朗讀</div>
+    <h1 class="title">Wonder 朗讀特訓站</h1>
+    <p class="subtitle">跟著奧吉的故事，30 天練成一場漂亮的朗讀</p>
+    <div class="stat-row">
+      <div class="stat-chip">🔥 連續 <b id="stat-streak">0</b> 天</div>
+      <div class="stat-chip">⭐ 累積 <b id="stat-points">0</b> 分</div>
+      <div class="stat-chip">📖 練習 <b id="stat-days">0</b>/30 天</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="home">首頁</button>
+    <button class="tab-btn" data-tab="text">課文朗讀</button>
+    <button class="tab-btn" data-tab="vocab">單字卡</button>
+    <button class="tab-btn" data-tab="games">遊戲關卡</button>
+    <button class="tab-btn" data-tab="badges">成就徽章</button>
+  </nav>
+
+  <section class="tab active" id="tab-home">
+    <div class="card">
+      <h2 class="h">📋 每日考核</h2>
+      <p class="p">點下面星空地圖上任何一天，這裡會顯示那天要做的任務，全部完成（含小考、錄音）才算通過考核。</p>
+      <div class="day-detail" id="dayDetail"></div>
+    </div>
+    <div class="card">
+      <h2 class="h">30 天星空地圖</h2>
+      <p class="p">每天照著當天的進度練習，星星就會亮起來並記下日期。目標是連續 30 天，比賽當天就能自信上台。</p>
+      <div class="starmap" id="starmap"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:linear-gradient(160deg,var(--gold),#C98A22)"></i>已練習（顯示日期）</span>
+        <span><i class="dot" style="background:var(--bg-deep);border:1px solid var(--line)"></i>還沒練習</span>
+        <span><i class="dot" style="background:transparent;border:2px solid var(--coral)"></i>今天</span>
+        <span><i class="dot" style="background:var(--green);"></i>當天考核已通過</span>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="h">🎙 最新錄音回放</h2>
+      <p class="p">每次錄音只保留最新一筆，方便隨時回放檢查發音和語速。</p>
+      <div id="latestRecCard"></div>
+    </div>
+    <div class="card">
+      <h2 class="h">今天先做這個</h2>
+      <p class="p" id="suggestion-text">先去「課文朗讀」聽一次全文，抓住語氣和停頓，再挑幾個單字複習。</p>
+      <div class="controls-row">
+        <button class="btn" onclick="switchTab('text')">去朗讀課文</button>
+        <button class="btn secondary" onclick="switchTab('games')">先玩個遊戲熱身</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-text">
+    <div class="card">
+      <h2 class="h">🎙 麥克風診斷</h2>
+      <p class="p">如果錄音一直失敗，先按這個按鈕測試，畫面會顯示詳細原因，方便判斷問題出在哪裡。</p>
+      <div class="controls-row">
+        <button class="btn secondary" onclick="runMicTest()">執行麥克風測試</button>
+      </div>
+      <div id="micTestResult" style="margin-top:10px; font-size:13px; color:var(--dim); line-height:1.7;"></div>
+    </div>
+    <div class="card">
+      <h2 class="h">整段跟讀模式</h2>
+      <p class="p">按「播放全文」，電腦會一句一句唸出來，跟著螢幕上反白的句子一起唸。可以調整語速，先從慢速開始。</p>
+      <div class="controls-row">
+        <button class="btn" id="playAllBtn" onclick="playAll()">▶ 播放全文</button>
+        <button class="btn secondary" id="stopAllBtn" onclick="stopAll()">■ 停止</button>
+        <div class="rate-wrap">
+          語速
+          <input type="range" id="rateSlider" min="0.6" max="1.2" step="0.1" value="0.85">
+          <span id="rateVal">0.85x</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="h">逐句練習（點喇叭聽發音，唸完打勾）</h2>
+      <div id="lineList"></div>
+      <div class="controls-row" style="margin-top:14px;">
+        <span class="p" style="margin:0;" id="lineProgress">0 / 19 句已練習</span>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="tab" id="tab-vocab">
+    <div class="card">
+      <h2 class="h">關鍵單字卡</h2>
+      <p class="p">點卡片翻面看中文意思，點喇叭聽發音。覺得已經記熟了，按下✓標記「已學會」。</p>
+      <div class="vocab-grid" id="vocabGrid"></div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-games">
+    <div class="card" id="gameMenuCard">
+      <h2 class="h">選一個關卡挑戰</h2>
+      <div class="game-menu" id="gameMenu"></div>
+    </div>
+    <div class="card" id="gameArea" style="display:none;"></div>
+  </section>
+
+  <section class="tab" id="tab-badges">
+    <div class="card">
+      <h2 class="h">成就徽章</h2>
+      <p class="p">完成不同的練習任務，解鎖徽章。全部收集齊，代表你已經準備好上台了！</p>
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TEXT_LINES = [
+  {en:"I walked into school that morning trying to look normal.", zh:"那天早上我走進學校，努力表現得很正常。"},
+  {en:"That was what I had learned to do—", zh:"這是我學會的方法──"},
+  {en:"act like I didn't notice the stares, or the whispers, or the quick glances away.", zh:"假裝沒注意到那些盯著看、竊竊私語，或匆匆撇開的目光。"},
+  {en:"But the truth is, you always notice. Even when you pretend you don't.", zh:"但事實是，你永遠都會注意到，即使你假裝沒有。"},
+  {en:"In the hallway, I heard my name. I didn't turn around. I just kept walking.", zh:"在走廊上，我聽到有人叫我的名字。我沒有回頭，只是繼續走。"},
+  {en:"\u201cIgnore it,\u201d I told myself. \u201cJust get through the day.\u201d", zh:"「不要理它，」我告訴自己，「先撐過今天再說。」"},
+  {en:"But ignoring it didn't make it disappear.", zh:"但不理它，並不會讓這一切消失。"},
+  {en:"At lunch, I sat down carefully at the table.", zh:"午餐時間，我小心翼翼地坐到餐桌旁。"},
+  {en:"For a moment, everything felt normal.", zh:"有那麼一瞬間，一切感覺很正常。"},
+  {en:"Then someone stood up. One by one, others followed.", zh:"接著有人站了起來，其他人也一個接一個跟著站起來。"},
+  {en:"No one said anything. No one needed to.", zh:"沒有人說一句話，也不需要說。"},
+  {en:"I was left sitting there, staring at my tray. My appetite was gone.", zh:"我一個人坐在那裡，盯著餐盤，一點食慾都沒有了。"},
+  {en:"I wondered what it would feel like to be invisible.", zh:"我在想，變成隱形人會是什麼感覺。"},
+  {en:"No stares. No whispers. No questions.", zh:"沒有盯著看，沒有竊竊私語，也沒有問題。"},
+  {en:"Maybe invisible would be easier.", zh:"或許隱形會比較輕鬆。"},
+  {en:"But then I heard my mother's voice in my head.", zh:"但這時我腦中響起媽媽的聲音。"},
+  {en:"\u201cYou are not invisible,\u201d she always said. \u201cYou are stronger than you think.\u201d", zh:"「你不是隱形人，」她總是這麼說，「你比自己想的還要堅強。」"},
+  {en:"Strong. I wasn't sure I felt strong.", zh:"堅強。我不確定自己是不是真的感覺堅強。"},
+  {en:"Still, I picked up my fork. I forced myself to eat.", zh:"儘管如此，我還是拿起了叉子，強迫自己吃了下去。"},
+  {en:"Because even if I couldn't change how people saw me, I could choose not to disappear.", zh:"因為即使我無法改變別人看我的眼光，我還是可以選擇不消失。"},
+  {en:"And somehow, that felt like a small kind of victory.", zh:"而不知怎麼地，那感覺像是一種小小的勝利。"}
+];
+
+const VOCAB = [
+  {w:"normal", p:"/ˈnɔːr.məl/", pos:"adj.", zh:"正常的", ex:"I walked into school trying to look normal."},
+  {w:"notice", p:"/ˈnoʊ.tɪs/", pos:"v.", zh:"注意到", ex:"You always notice, even when you pretend you don't."},
+  {w:"stare", p:"/ster/", pos:"n./v.", zh:"盯著看", ex:"I didn't notice the stares."},
+  {w:"whisper", p:"/ˈwɪs.pɚ/", pos:"n./v.", zh:"竊竊私語", ex:"The whispers, or the quick glances away."},
+  {w:"glance", p:"/ɡlæns/", pos:"n.", zh:"匆匆一瞥", ex:"The quick glances away."},
+  {w:"hallway", p:"/ˈhɔːl.weɪ/", pos:"n.", zh:"走廊", ex:"In the hallway, I heard my name."},
+  {w:"ignore", p:"/ɪɡˈnɔːr/", pos:"v.", zh:"忽視、不理會", ex:"\u201cIgnore it,\u201d I told myself."},
+  {w:"disappear", p:"/ˌdɪs.əˈpɪr/", pos:"v.", zh:"消失", ex:"Ignoring it didn't make it disappear."},
+  {w:"carefully", p:"/ˈker.fəl.i/", pos:"adv.", zh:"小心地", ex:"I sat down carefully at the table."},
+  {w:"appetite", p:"/ˈæp.ə.taɪt/", pos:"n.", zh:"食慾", ex:"My appetite was gone."},
+  {w:"invisible", p:"/ɪnˈvɪz.ə.bl/", pos:"adj.", zh:"隱形的", ex:"What it would feel like to be invisible."},
+  {w:"wonder", p:"/ˈwʌn.dɚ/", pos:"v.", zh:"想知道、好奇", ex:"I wondered what it would feel like."},
+  {w:"voice", p:"/vɔɪs/", pos:"n.", zh:"聲音", ex:"I heard my mother's voice in my head."},
+  {w:"strong", p:"/strɔːŋ/", pos:"adj.", zh:"強壯的、堅強的", ex:"You are stronger than you think."},
+  {w:"forced", p:"/fɔːrst/", pos:"v.", zh:"強迫（自己）", ex:"I forced myself to eat."},
+  {w:"victory", p:"/ˈvɪk.tər.i/", pos:"n.", zh:"勝利", ex:"That felt like a small kind of victory."}
+];
+
+const BADGES = [
+  {id:"first", icon:"🚀", name:"起飛第一步", desc:"完成第一次練習"},
+  {id:"vocab8", icon:"📘", name:"單字入門", desc:"學會 8 個單字"},
+  {id:"vocabAll", icon:"🎓", name:"單字大師", desc:"學會全部單字"},
+  {id:"allLines", icon:"🗣️", name:"朗讀達人", desc:"每一句都練過"},
+  {id:"gameMatch", icon:"🧩", name:"配對高手", desc:"完成單字配對"},
+  {id:"gameFill", icon:"✍️", name:"填空王", desc:"完成填空挑戰"},
+  {id:"gameListen", icon:"🎧", name:"耳朵靈敏", desc:"完成聽力選擇"},
+  {id:"gameOrder", icon:"🧠", name:"排序高手", desc:"完成句子排序"},
+  {id:"streak7", icon:"🔥", name:"七天不間斷", desc:"連續練習 7 天"},
+  {id:"streak14", icon:"⚡", name:"半月堅持", desc:"連續練習 14 天"},
+  {id:"streak30", icon:"🏆", name:"三十天完賽", desc:"連續練習 30 天"},
+  {id:"points100", icon:"⭐", name:"百分達人", desc:"累積 100 分"}
+];
+
+function findVocabInLine(i){
+  return VOCAB.map((v,vi)=>({v,vi})).filter(o=> TEXT_LINES[i].en.toLowerCase().includes(o.v.w.toLowerCase()));
+}
+function buildDayPlan(){
+  const plan = [];
+  TEXT_LINES.forEach((line,i)=>{
+    const found = findVocabInLine(i);
+    const tasks = [];
+    tasks.push({text:'\u807d\u4e26\u8ddf\u8b80\u4eca\u5929\u7684\u53e5\u5b50 3 \u6b21', type:'listen3', line:i});
+    if(found.length){
+      tasks.push({text:'\u5b78\u7fd2\u55ae\u5b57\uff1a' + found.map(o=>o.v.w).join('\u3001'), type:'check'});
+    }
+    tasks.push({text:'\u9304\u4e0b\u81ea\u5df1\u6717\u8b80\u9019\u53e5\uff0c\u4e26\u56de\u653e\u6aa2\u67e5\u767c\u97f3', type:'record', line:i});
+    if(found.length){
+      tasks.push({text:'\u5b8c\u6210\u4eca\u65e5\u55ae\u5b57\u5c0f\u8003', type:'quiz'});
+    }
+    plan.push({
+      day:i+1,
+      theme:'\u7b2c ' + (i+1) + ' \u53e5\uff1a' + line.zh,
+      vocab: found.map(o=>o.vi),
+      line: i,
+      tasks
+    });
+  });
+  const halfPoint = Math.ceil(TEXT_LINES.length / 2);
+  const reviewDaysDefs = [
+    {theme:'\u5168\u6587\u6717\u8b80\u7e3d\u8907\u7fd2', tasks:[
+      {text:'\u7528\u6162\u901f\u64ad\u653e\u5168\u6587\u4e00\u6b21\uff0c\u908a\u807d\u908a\u8ddf\u8b80', type:'check'},
+      {text:'\u9304\u4e0b\u4e00\u6b21\u5b8c\u6574\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
+    ]},
+    {theme:'\u55ae\u5b57\u7e3d\u8907\u7fd2', tasks:[
+      {text:'\u628a\u6240\u6709\u55ae\u5b57\u5361\u90fd\u7ffb\u904e\u4e00\u6b21', type:'check'},
+      {text:'\u73a9\u4e00\u6b21\u300c\u55ae\u5b57\u914d\u5c0d\u300d\u904a\u6232', type:'check'},
+      {text:'\u73a9\u4e00\u6b21\u300c\u807d\u529b\u9078\u64c7\u300d\u904a\u6232', type:'check'}
+    ]},
+    {theme:'\u586b\u7a7a\u8207\u6392\u5e8f\u6311\u6230', tasks:[
+      {text:'\u73a9\u4e00\u6b21\u300c\u586b\u7a7a\u6311\u6230\u300d\u904a\u6232\uff0c\u76ee\u6a19 6/8 \u4ee5\u4e0a', type:'check'},
+      {text:'\u73a9\u4e00\u6b21\u300c\u53e5\u5b50\u6392\u5e8f\u300d\u904a\u6232', type:'check'}
+    ]},
+    {theme:'\u60c5\u7dd2\u8d77\u4f0f\u7df4\u7fd2', tasks:[
+      {text:'\u7df4\u7fd2\u8a9e\u6c23\u6700\u4f4e\u843d\u7684\u53e5\u5b50\uff0c\u5531\u51fa\u5931\u843d\u611f', type:'check'},
+      {text:'\u7df4\u7fd2\u8f49\u6298\u7684\u53e5\u5b50\uff08\u5abd\u5abd\u7684\u8a71\uff09\uff0c\u5531\u51fa\u529b\u91cf\u611f', type:'check'}
+    ]},
+    {theme:'\u4e2d\u901f\u5168\u6587\u6717\u8b80', tasks:[
+      {text:'\u8a9e\u901f\u8abf\u5230 0.9\uff0c\u64ad\u653e\u5168\u6587\u4e26\u8ddf\u8b80\u4e00\u6b21', type:'check'},
+      {text:'\u9304\u4e0b\u9019\u6b21\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
+    ]},
+    {theme:'\u5c0d\u93e1\u5b50\u7df4\u7fd2\uff0b\u5ff5\u7d66\u5bb6\u4eba\u807d', tasks:[
+      {text:'\u5c0d\u8457\u93e1\u5b50\u6717\u8b80\u5168\u6587\u4e00\u6b21\uff0c\u6ce8\u610f\u8868\u60c5\u548c\u773c\u795e', type:'check'},
+      {text:'\u5192\u8b80\u7d66\u5bb6\u4eba\u807d\uff0c\u8acb\u4ed6\u5011\u7d66\u4e00\u500b\u5efa\u8b70', type:'check'},
+      {text:'\u9304\u4e0b\u9019\u6b21\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
+    ]},
+    {theme:'\u6b63\u5e38\u8a9e\u901f\u6717\u8b80', tasks:[
+      {text:'\u8a9e\u901f\u8abf\u5230 1.0\uff0c\u64ad\u653e\u5168\u6587\u4e26\u8ddf\u8b80\u4e00\u6b21', type:'check'},
+      {text:'\u9304\u4e0b\u9019\u6b21\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
+    ]},
+    {theme:'\u6a21\u64ec\u6bd4\u8cfd I', tasks:[
+      {text:'\u8acb\u5bb6\u4eba\u7576\u8a55\u5be9\uff0c\u5b8c\u6574\u8868\u6f14\u4e00\u6b21\u6717\u8b80', type:'check'},
+      {text:'\u9304\u4e0b\u9019\u6b21\u8868\u6f14\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
+    ]},
+    {theme:'\u6a21\u64ec\u6bd4\u8cfd II\uff08\u4e0a\u53f0\u524d\u6700\u5f8c\u4e00\u7df4\uff09', tasks:[
+      {text:'\u5c0d\u81ea\u5df1\u8aaa\uff1a\u6211\u5df2\u7d93\u6e96\u5099\u597d\u4e86\uff01', type:'check'},
+      {text:'\u9304\u4e0b\u6700\u5f8c\u4e00\u6b21\u6717\u8b80\uff0c\u7559\u4f5c\u7d00\u5ff5\u8207\u56de\u9867', type:'record', line:'full'}
+    ]}
+  ];
+  const startDay = plan.length + 1;
+  reviewDaysDefs.forEach((d, idx) => {
+    plan.push(Object.assign({day: startDay + idx}, d));
+  });
+  return plan;
+}
+const DAY_PLAN = buildDayPlan();
+
+
+let state = {
+  practiceDates: [],
+  points: 0,
+  linesDone: [],
+  vocabKnown: [],
+  badges: [],
+  bestScores: {},
+  dayChecks: {},
+  dayListenProgress: {}
+};
+let selectedDay = null;
+let lastRecording = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let activeRecKey = null;
+let storageOk = true;
+let currentGame = null;
+let ttsVoice = null;
+
+function todayStr(){ const d = new Date(); return d.toISOString().slice(0,10); }
+
+function pickVoice(){
+  const voices = speechSynthesis.getVoices();
+  ttsVoice = voices.find(v => v.lang === 'en-US') || voices.find(v => v.lang && v.lang.startsWith('en')) || null;
+}
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = pickVoice;
+  pickVoice();
+}
+function speak(text, rate){
+  if(!('speechSynthesis' in window)){
+    showToast('這個瀏覽器不支援語音朗讀，建議用電腦版 Chrome 開啟');
+    return;
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = rate || 0.9;
+  if(ttsVoice) u.voice = ttsVoice;
+  speechSynthesis.speak(u);
+  return u;
+}
+
+async function loadState(){
+  try{
+    const res = await window.storage.get('wonder-progress', false);
+    if(res && res.value){
+      const loaded = JSON.parse(res.value);
+      state = Object.assign(state, loaded);
+    }
+  }catch(e){
+    storageOk = true;
+  }
+  try{
+    const rec = await window.storage.get('wonder-last-recording', false);
+    if(rec && rec.value){
+      lastRecording = JSON.parse(rec.value);
+    }
+  }catch(e){
+    lastRecording = null;
+  }
+  renderAll();
+}
+async function saveState(){
+  try{
+    await window.storage.set('wonder-progress', JSON.stringify(state), false);
+  }catch(e){}
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function addPoints(n){
+  state.points += n;
+  checkBadges();
+}
+
+function markToday(){
+  const t = todayStr();
+  if(!state.practiceDates.includes(t)){
+    state.practiceDates.push(t);
+    showToast('今天的星星亮起來了！⭐');
+  }
+  checkBadges();
+  saveState();
+  renderStarmap();
+  renderStats();
+}
+
+function getStreak(){
+  const dates = new Set(state.practiceDates);
+  let streak = 0;
+  let d = new Date();
+  while(true){
+    const s = d.toISOString().slice(0,10);
+    if(dates.has(s)){ streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return streak;
+}
+
+function checkBadges(){
+  const has = id => state.badges.includes(id);
+  const unlock = (id, msg) => { if(!has(id)){ state.badges.push(id); showToast('🎉 解鎖徽章：' + msg); } };
+  if(state.practiceDates.length >= 1) unlock('first', '起飛第一步');
+  if(state.vocabKnown.length >= 8) unlock('vocab8', '單字入門');
+  if(state.vocabKnown.length >= VOCAB.length) unlock('vocabAll', '單字大師');
+  if(state.linesDone.length >= TEXT_LINES.length) unlock('allLines', '朗讀達人');
+  if(state.bestScores.match) unlock('gameMatch', '配對高手');
+  if(state.bestScores.fill) unlock('gameFill', '填空王');
+  if(state.bestScores.listen) unlock('gameListen', '耳朵靈敏');
+  if(state.bestScores.order) unlock('gameOrder', '排序高手');
+  const streak = getStreak();
+  if(streak >= 7) unlock('streak7', '七天不間斷');
+  if(streak >= 14) unlock('streak14', '半月堅持');
+  if(streak >= 30) unlock('streak30', '三十天完賽');
+  if(state.points >= 100) unlock('points100', '百分達人');
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-' + name));
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', ()=>switchTab(b.dataset.tab)));
+
+function renderStats(){
+  document.getElementById('stat-streak').textContent = getStreak();
+  document.getElementById('stat-points').textContent = state.points;
+  document.getElementById('stat-days').textContent = Math.min(state.practiceDates.length, 30);
+}
+
+function sortedDates(){ return [...state.practiceDates].sort(); }
+function dateLabel(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+function isDayAssessed(day){
+  const plan = DAY_PLAN.find(p=>p.day===day);
+  if(!plan) return false;
+  const checks = state.dayChecks[day];
+  if(!checks) return false;
+  return plan.tasks.every((t,i)=>checks[i]);
+}
+function renderStarmap(){
+  const el = document.getElementById('starmap');
+  el.innerHTML = '';
+  const dates = sortedDates();
+  const total = dates.length;
+  for(let i=1;i<=30;i++){
+    const div = document.createElement('div');
+    div.className = 'day';
+    const done = i <= total;
+    if(done) div.classList.add('done');
+    if(i === total + 1) div.classList.add('today');
+    if(isDayAssessed(i)) div.classList.add('assessed');
+    if(selectedDay === i) div.classList.add('selected');
+    if(done){
+      div.innerHTML = '<span>★</span><span class="day-date">' + dateLabel(dates[i-1]) + '</span>';
+    } else {
+      div.textContent = i;
+    }
+    div.onclick = () => openDayDetail(i);
+    el.appendChild(div);
+  }
+}
+
+function openDayDetail(day){
+  selectedDay = day;
+  renderStarmap();
+  const plan = DAY_PLAN.find(p=>p.day===day);
+  const dates = sortedDates();
+  const done = day <= dates.length;
+  const el = document.getElementById('dayDetail');
+  if(!plan){ el.innerHTML = ''; return; }
+  const checks = state.dayChecks[day] || plan.tasks.map(()=>false);
+  const assessed = isDayAssessed(day);
+  let html = `<div class="dd-head">
+      <div class="dd-title">Day ${day}：${plan.theme}</div>
+      <div class="dd-status ${assessed?'pass':'pending'}">${assessed?'✓ 考核通過':'尚未完成考核'}</div>
+    </div>
+    <div class="dd-date">${done ? '完成日期：' + dates[day-1] : '這天還沒有練習紀錄'}</div>`;
+  html += '<div style="margin-top:10px;">';
+  plan.tasks.forEach((t, i) => {
+    const checked = !!checks[i];
+    if(t.type === 'quiz'){
+      html += `<div class="check-item">
+          <div class="check-box ${checked?'checked':''}" onclick="toggleDayCheck(${day},${i})">${checked?'✓':''}</div>
+          <div class="check-label ${checked?'struck':''}">${t.text}
+            <div id="quizSlot-${day}"></div>
+          </div>
+        </div>`;
+    } else if(t.type === 'record'){
+      html += renderRecordTask(day, i, t, checked);
+    } else if(t.type === 'listen3'){
+      html += renderListenTask(day, i, t, checked);
+    } else {
+      html += `<div class="check-item">
+          <div class="check-box ${checked?'checked':''}" onclick="toggleDayCheck(${day},${i})">${checked?'✓':''}</div>
+          <div class="check-label ${checked?'struck':''}">${t.text}</div>
+        </div>`;
+    }
+  });
+  html += '</div>';
+  const hasQuiz = plan.tasks.some(t=>t.type==='quiz');
+  const quizIdx = plan.tasks.findIndex(t=>t.type==='quiz');
+  if(hasQuiz && !checks[quizIdx] && plan.vocab){
+    html += `<button class="btn secondary small" style="margin-top:8px;" onclick="startDayQuiz(${day})">開始今日單字小考</button>`;
+  }
+  html += `<div id="dayQuizArea-${day}" style="margin-top:8px;"></div>`;
+  el.innerHTML = html;
+}
+
+function renderListenTask(day, idx, task, checked){
+  const progress = checked ? 3 : (state.dayListenProgress[day] || 0);
+  let btns = '';
+  for(let n=1; n<=3; n++){
+    const done = n <= progress;
+    const ready = n === progress + 1 && !checked;
+    const cls = done ? 'listen-btn done' : (ready ? 'listen-btn ready' : 'listen-btn');
+    const disabled = (!ready && !done) || checked ? 'disabled' : '';
+    btns += `<button class="${cls}" ${disabled} onclick="playListenStep(${day},${idx},${n})">${done ? '✓ ' : '🔊 '}第 ${n} 次</button>`;
+  }
+  return `<div class="check-item">
+      <div class="check-box ${checked?'checked':''}">${checked?'✓':''}</div>
+      <div class="check-label ${checked?'struck':''}">${task.text}
+        <div class="listen-steps">${btns}</div>
+      </div>
+    </div>`;
+}
+
+function playListenStep(day, idx, n){
+  const plan = DAY_PLAN.find(p => p.day === day);
+  if(!plan) return;
+  const progress = state.dayListenProgress[day] || 0;
+  if(n !== progress + 1) return;
+  const lineIdx = plan.tasks[idx] && plan.tasks[idx].line;
+  if(typeof lineIdx !== 'number') return;
+  const u = speak(TEXT_LINES[lineIdx].en, 0.85);
+  if(!u){ return; }
+  u.onend = () => {
+    state.dayListenProgress[day] = n;
+    if(n === 3){
+      if(!state.dayChecks[day]) state.dayChecks[day] = plan.tasks.map(()=>false);
+      state.dayChecks[day][idx] = true;
+      addPoints(2);
+      markToday();
+      checkBadges();
+      showToast('聽完 3 次了，自動打勾！');
+    }
+    saveState();
+    openDayDetail(day);
+  };
+}
+
+function renderRecordTask(day, idx, task, checked){
+  const isCurrent = lastRecording && lastRecording.day === day && lastRecording.taskIdx === idx;
+  if(typeof task.line === 'number'){
+    return `<div class="check-item">
+        <div class="check-box ${checked?'checked':''}">${checked?'✓':''}</div>
+        <div class="check-label ${checked?'struck':''}">${task.text}
+          <div class="rec-note" style="margin-top:6px;">🎙 錄音按鈕在「課文朗讀」頁面，就在第 ${task.line+1} 句旁邊，可以邊看句子邊錄。</div>
+          ${isCurrent ? `<audio class="rec-audio" controls src="${lastRecording.dataUrl}"></audio>` : ''}
+          <button class="btn secondary small" style="margin-top:8px;" onclick="goToLineRecord(${task.line})">前往該句錄音</button>
+        </div>
+      </div>`;
+  }
+  const label = '全文';
+  return `<div class="check-item">
+      <div class="check-box ${checked?'checked':''}">${checked?'✓':''}</div>
+      <div class="check-label ${checked?'struck':''}">${task.text}
+        <div class="rec-widget">
+          <div class="rec-row">
+            <button class="rec-btn" id="recBtn-${day}-${idx}" onclick="toggleRecording(${day},${idx},'${label}')">
+              <span class="rec-dot"></span><span id="recBtnLabel-${day}-${idx}">開始錄音</span>
+            </button>
+            <span class="rec-status" id="recStatus-${day}-${idx}">${isCurrent ? '已儲存最新錄音' : '尚未錄音'}</span>
+          </div>
+          ${isCurrent ? `<audio class="rec-audio" controls src="${lastRecording.dataUrl}"></audio>` : ''}
+          <div class="rec-note">需要允許瀏覽器使用麥克風；每次錄音會覆蓋前一筆，只保留最新的一筆。</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function goToLineRecord(lineIdx){
+  switchTab('text');
+  setTimeout(() => {
+    const el = document.getElementById('line-' + lineIdx);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 60);
+}
+
+function setRecStatus(day, idx, text, isError){
+  const el = document.getElementById('recStatus-' + day + '-' + idx);
+  if(!el) return;
+  el.textContent = text;
+  el.style.color = isError ? 'var(--red)' : '';
+}
+
+function runMicTest(){
+  const el = document.getElementById('micTestResult');
+  const lines = [];
+  const proto = location.protocol;
+  const isLocalScheme = (proto === 'content:' || proto === 'file:' || proto === 'blob:');
+  lines.push('目前網址協定：' + proto + (isLocalScheme ? ' ← 本機檔案來源，麥克風會被系統直接封鎖' : ''));
+  lines.push('是否為安全連線環境 (isSecureContext)：' + (window.isSecureContext ? '是' : '否 ← 這會直接封鎖麥克風'));
+  lines.push('是否在 iframe 內嵌頁面中：' + (window.self !== window.top ? '是 ← 嵌入頁面常會封鎖麥克風權限' : '否'));
+  lines.push('瀏覽器是否支援 getUserMedia：' + (navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? '支援' : '不支援'));
+  el.innerHTML = lines.map(l=>'· '+l).join('<br>');
+  if(isLocalScheme){
+    el.innerHTML += '<br><br><b style="color:var(--red)">✗ 偵測到本機檔案來源（' + proto + '）</b><br>' +
+      'Android/iOS 上的 Chrome，基於安全設計，對這種來源永遠不會授權麥克風，不管有沒有點「允許」都一樣。<br><br>' +
+      '<b style="color:var(--gold-soft)">解法：</b>不要用「檔案總管」或「下載」清單裡的檔案來開啟，改成直接在 Chrome 網址列貼上已發佈的網址（https:// 開頭），用真正的網頁分頁打開這個頁面。';
+    return;
+  }
+  el.innerHTML += '<br>· 正在嘗試取得麥克風權限…';
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    el.innerHTML += '<br><b style="color:var(--red)">此瀏覽器環境不支援錄音 API。</b>';
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+    el.innerHTML += '<br><b style="color:var(--green)">✓ 成功取得麥克風權限！錄音功能應該可以正常使用。</b>';
+    stream.getTracks().forEach(t => t.stop());
+  }).catch(err => {
+    const name = err && err.name ? err.name : '未知';
+    const detail = err && err.message ? err.message : '（無詳細訊息）';
+    let hint = '';
+    if(name === 'NotAllowedError') hint = '<br>提示：請點網址列左邊的鎖頭／網站資訊圖示，把「麥克風」設為允許，然後重新整理頁面。';
+    el.innerHTML += '<br><b style="color:var(--red)">✗ 取得麥克風失敗</b><br>· 錯誤類型：' + name + '<br>· 詳細訊息：' + detail + hint;
+  });
+}
+
+function toggleRecording(day, idx, label, lineIdx){
+  const key = day + '-' + idx;
+  if(activeRecKey === key && mediaRecorder && mediaRecorder.state === 'recording'){
+    mediaRecorder.stop();
+    return;
+  }
+  if(activeRecKey && activeRecKey !== key){
+    showToast('請先停止目前正在進行的錄音');
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showToast('這個瀏覽器不支援錄音功能，請改用「在瀏覽器分頁開啟」後再試');
+    return;
+  }
+  const proto = location.protocol;
+  if(proto === 'content:' || proto === 'file:' || proto === 'blob:'){
+    setRecStatus(day, idx, '偵測到本機檔案來源（' + proto + '），Chrome 對這種來源永遠會拒絕麥克風。請直接在 Chrome 網址列貼上已發佈的 https:// 網址開啟，不要用「檔案總管」開啟下載的檔案。', true);
+    showToast('這是本機檔案來源，請改用 https:// 網址直接開啟');
+    return;
+  }
+  if(window.isSecureContext === false){
+    showToast('目前不是安全連線環境，瀏覽器會封鎖麥克風，請用「在瀏覽器分頁開啟」後再試');
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+    audioChunks = [];
+    let mimeType = '';
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported){
+      if(MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+      else if(MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+    }
+    mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+    activeRecKey = key;
+    mediaRecorder.ondataavailable = e => { if(e.data && e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(audioChunks, {type: mediaRecorder.mimeType || 'audio/webm'});
+      activeRecKey = null;
+      finishRecording(day, idx, label, blob, lineIdx);
+    };
+    mediaRecorder.start();
+    setRecButtonState(day, idx, true, lineIdx);
+    setRecStatus(day, idx, '錄音中…', false);
+  }).catch(err => {
+    const name = err && err.name ? err.name : '未知錯誤';
+    const detail = err && err.message ? err.message : '';
+    let msg = '無法使用麥克風（' + name + '）';
+    if(name === 'NotAllowedError') msg += '：權限被拒絕，請到瀏覽器的網站設定裡允許使用麥克風';
+    else if(name === 'NotFoundError') msg += '：找不到麥克風裝置';
+    else if(name === 'NotReadableError') msg += '：麥克風被其他 App 占用';
+    else if(name === 'SecurityError') msg += '：瀏覽器基於安全政策封鎖了麥克風（常見於嵌入頁面/預覽框）';
+    else if(detail) msg += '：' + detail;
+    showToast('錄音失敗，詳情請看下方文字');
+    setRecStatus(day, idx, msg, true);
+  });
+}
+
+function setRecButtonState(day, idx, recording, lineIdx){
+  const btn = document.getElementById('recBtn-' + day + '-' + idx);
+  const lbl = document.getElementById('recBtnLabel-' + day + '-' + idx);
+  if(btn){
+    btn.classList.toggle('recording', recording);
+    if(lbl) lbl.textContent = recording ? '■ 停止錄音' : '開始錄音';
+  }
+  if(typeof lineIdx === 'number'){
+    const lineBtn = document.getElementById('lineRecBtn-' + lineIdx);
+    if(lineBtn){
+      lineBtn.classList.toggle('recording', recording);
+      lineBtn.textContent = recording ? '⏹' : '🎙';
+      lineBtn.title = recording ? '停止錄音' : '錄音';
+    }
+  }
+}
+
+function finishRecording(day, idx, label, blob, lineIdx){
+  showToast('處理錄音中…');
+  const reader = new FileReader();
+  reader.onloadend = async () => {
+    const dataUrl = reader.result;
+    const record = { day, taskIdx: idx, label, dataUrl, savedAt: new Date().toISOString() };
+    try{
+      await window.storage.set('wonder-last-recording', JSON.stringify(record), false);
+      lastRecording = record;
+      const plan = DAY_PLAN.find(p => p.day === day);
+      if(!state.dayChecks[day]) state.dayChecks[day] = plan.tasks.map(()=>false);
+      state.dayChecks[day][idx] = true;
+      addPoints(3);
+      markToday();
+      saveState();
+      checkBadges();
+      showToast('錄音完成，已儲存！');
+    }catch(e){
+      showToast('錄音檔案太大，無法儲存，請縮短錄音長度再試一次');
+    }
+    if(selectedDay === day) openDayDetail(day);
+    if(typeof lineIdx === 'number') renderLineRecStatus(lineIdx);
+    renderLatestRecCard();
+  };
+  reader.readAsDataURL(blob);
+}
+
+function renderLatestRecCard(){
+  const el = document.getElementById('latestRecCard');
+  if(!el) return;
+  if(!lastRecording || !lastRecording.dataUrl){
+    el.innerHTML = `<p class="p" style="margin:0;">還沒有錄音紀錄，去下面每天的任務裡按「開始錄音」錄下第一次朗讀吧。</p>`;
+    return;
+  }
+  const when = new Date(lastRecording.savedAt);
+  const whenLabel = (when.getMonth()+1) + '/' + when.getDate() + ' ' + String(when.getHours()).padStart(2,'0') + ':' + String(when.getMinutes()).padStart(2,'0');
+  el.innerHTML = `<div class="latest-rec-card">
+      <div class="lr-label">Day ${lastRecording.day} · ${lastRecording.label} · ${whenLabel}</div>
+      <audio class="rec-audio" controls src="${lastRecording.dataUrl}"></audio>
+    </div>`;
+}
+
+function toggleDayCheck(day, idx){
+  const plan = DAY_PLAN.find(p=>p.day===day);
+  if(!state.dayChecks[day]) state.dayChecks[day] = plan.tasks.map(()=>false);
+  state.dayChecks[day][idx] = !state.dayChecks[day][idx];
+  if(state.dayChecks[day][idx]){ addPoints(2); markToday(); }
+  saveState();
+  checkBadges();
+  openDayDetail(day);
+}
+
+function startDayQuiz(day){
+  const plan = DAY_PLAN.find(p=>p.day===day);
+  const words = plan.vocab.map(i=>VOCAB[i]);
+  const questions = words.map((v, wi) => {
+    const distractors = pickRandom(VOCAB.filter(x=>x.w!==v.w), 3).map(x=>x.zh);
+    return { word:v.w, answer:v.zh, options: shuffle([v.zh, ...distractors]) };
+  });
+  const dq = { day, questions, i:0, correct:0 };
+  window._dq = dq;
+  renderDayQuizQ();
+}
+function renderDayQuizQ(){
+  const dq = window._dq;
+  const area = document.getElementById('dayQuizArea-' + dq.day);
+  if(!area) return;
+  if(dq.i >= dq.questions.length){
+    const pass = dq.correct === dq.questions.length;
+    area.innerHTML = `<div class="mini-quiz"><div class="mq-q">${pass ? '全部答對，太棒了！' : dq.correct + ' / ' + dq.questions.length + ' 答對，再試一次會更好'}</div>
+      <button class="btn small" onclick="startDayQuiz(${dq.day})">再考一次</button></div>`;
+    if(pass){
+      const plan = DAY_PLAN.find(p=>p.day===dq.day);
+      const quizIdx = plan.tasks.findIndex(t=>t.type==='quiz');
+      if(!state.dayChecks[dq.day]) state.dayChecks[dq.day] = plan.tasks.map(()=>false);
+      state.dayChecks[dq.day][quizIdx] = true;
+      addPoints(5); markToday(); saveState(); checkBadges();
+      setTimeout(()=>openDayDetail(dq.day), 900);
+    }
+    return;
+  }
+  const q = dq.questions[dq.i];
+  area.innerHTML = `<div class="mini-quiz">
+      <div class="mq-q">「${q.word}」的意思是？ <button class="icon-btn" style="width:26px;height:26px;font-size:12px;" onclick="speak('${q.word.replace(/'/g,"\\'")}',0.85)">🔊</button></div>
+      <div class="quiz-opts" id="dqOpts-${dq.day}"></div>
+    </div>`;
+  const opts = document.getElementById('dqOpts-' + dq.day);
+  q.options.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = opt;
+    b.onclick = () => {
+      document.querySelectorAll('#dqOpts-' + dq.day + ' .opt-btn').forEach(x=>{
+        x.disabled = true;
+        if(x.textContent === q.answer) x.classList.add('correct');
+        else if(x === b) x.classList.add('wrong');
+      });
+      if(opt === q.answer) dq.correct++;
+      setTimeout(()=>{ dq.i++; renderDayQuizQ(); }, 700);
+    };
+    opts.appendChild(b);
+  });
+}
+
+function renderLines(){
+  const el = document.getElementById('lineList');
+  el.innerHTML = '';
+  TEXT_LINES.forEach((line, i) => {
+    const row = document.createElement('div');
+    row.className = 'line-row';
+    row.id = 'line-' + i;
+    const done = state.linesDone.includes(i);
+    row.innerHTML = `
+      <div class="line-num">${i+1}</div>
+      <div style="flex:1;">
+        <div class="line-en">${line.en}</div>
+        <div class="line-zh">${line.zh}</div>
+        <div id="lineRec-${i}"></div>
+      </div>
+      <div class="line-actions">
+        <button class="icon-btn" title="聽發音" onclick="speak(TEXT_LINES[${i}].en, +document.getElementById('rateSlider').value)">🔊</button>
+        <button class="icon-btn" id="lineRecBtn-${i}" title="錄音" onclick="recordLine(${i})">🎙</button>
+        <button class="icon-btn ${done?'on':''}" title="標記已練習" id="check-${i}" onclick="toggleLine(${i})">✓</button>
+      </div>`;
+    el.appendChild(row);
+  });
+  updateLineProgress();
+  TEXT_LINES.forEach((line, i) => renderLineRecStatus(i));
+}
+
+function recordLine(i){
+  const plan = DAY_PLAN.find(p => typeof p.line === 'number' && p.line === i);
+  if(!plan){ showToast('找不到這句對應的每日任務'); return; }
+  const idx = plan.tasks.findIndex(t => t.type === 'record');
+  if(idx === -1){ showToast('這句沒有對應的錄音任務'); return; }
+  toggleRecording(plan.day, idx, '第 ' + (i+1) + ' 句', i);
+}
+
+function renderLineRecStatus(i){
+  const el = document.getElementById('lineRec-' + i);
+  if(!el) return;
+  const plan = DAY_PLAN.find(p => typeof p.line === 'number' && p.line === i);
+  if(!plan){ el.innerHTML = ''; return; }
+  const idx = plan.tasks.findIndex(t => t.type === 'record');
+  const isCurrent = lastRecording && lastRecording.day === plan.day && lastRecording.taskIdx === idx;
+  el.innerHTML = isCurrent
+    ? `<audio class="rec-audio" controls src="${lastRecording.dataUrl}" style="margin-top:6px; max-width:320px;"></audio>`
+    : '';
+}
+function toggleLine(i){
+  const idx = state.linesDone.indexOf(i);
+  if(idx === -1){ state.linesDone.push(i); addPoints(2); markToday(); showToast('這句練好了！+2 分'); }
+  else state.linesDone.splice(idx,1);
+  document.getElementById('check-'+i).classList.toggle('on');
+  updateLineProgress();
+  saveState();
+}
+function updateLineProgress(){
+  document.getElementById('lineProgress').textContent = state.linesDone.length + ' / ' + TEXT_LINES.length + ' 句已練習';
+}
+
+let playIndex = 0;
+let playing = false;
+function playAll(){
+  if(playing) return;
+  playing = true;
+  playIndex = 0;
+  document.getElementById('playAllBtn').disabled = true;
+  playNext();
+  markToday();
+}
+function playNext(){
+  if(!playing || playIndex >= TEXT_LINES.length){
+    stopAll();
+    return;
+  }
+  document.querySelectorAll('.line-row').forEach(r=>r.classList.remove('highlight'));
+  const row = document.getElementById('line-' + playIndex);
+  if(row){ row.classList.add('highlight'); row.scrollIntoView({behavior:'smooth', block:'center'}); }
+  const rate = +document.getElementById('rateSlider').value;
+  const u = speak(TEXT_LINES[playIndex].en, rate);
+  if(u){
+    u.onend = () => { if(playing){ playIndex++; setTimeout(playNext, 350); } };
+  } else {
+    playing = false;
+  }
+}
+function stopAll(){
+  playing = false;
+  speechSynthesis.cancel();
+  document.getElementById('playAllBtn').disabled = false;
+  document.querySelectorAll('.line-row').forEach(r=>r.classList.remove('highlight'));
+}
+document.getElementById('rateSlider').addEventListener('input', e=>{
+  document.getElementById('rateVal').textContent = (+e.target.value).toFixed(2) + 'x';
+});
+
+function renderVocab(){
+  const el = document.getElementById('vocabGrid');
+  el.innerHTML = '';
+  VOCAB.forEach((v, i) => {
+    const known = state.vocabKnown.includes(i);
+    const card = document.createElement('div');
+    card.className = 'vcard' + (known ? ' known' : '');
+    card.id = 'vcard-' + i;
+    card.innerHTML = `
+      <div onclick="flipCard(${i})" style="cursor:pointer;">
+        <div class="vword">${v.w}</div>
+        <div class="vphon">${v.p} ${v.pos}</div>
+        <div class="vmeaning">${v.zh}<br><span style="font-size:12px;color:var(--dim);">${v.ex}</span></div>
+      </div>
+      <div class="vcard-foot">
+        <button class="icon-btn" title="聽發音" onclick="event.stopPropagation(); speak('${v.w.replace(/'/g,"\\'")}', 0.9)">🔊</button>
+        <span class="vknown-tag" style="${known?'':'visibility:hidden'}">已學會</span>
+        <button class="icon-btn ${known?'on':''}" title="標記已學會" onclick="event.stopPropagation(); toggleKnown(${i})">✓</button>
+      </div>`;
+    el.appendChild(card);
+  });
+}
+function flipCard(i){
+  document.getElementById('vcard-'+i).classList.toggle('flipped');
+}
+function toggleKnown(i){
+  const idx = state.vocabKnown.indexOf(i);
+  if(idx === -1){ state.vocabKnown.push(i); addPoints(3); markToday(); showToast('學會一個單字！+3 分'); }
+  else state.vocabKnown.splice(idx,1);
+  renderVocab();
+  saveState();
+}
+
+const GAME_DEFS = [
+  {id:'match', icon:'🧩', name:'單字配對', desc:'翻牌找出英文與中文的配對'},
+  {id:'fill', icon:'✍️', name:'填空挑戰', desc:'從課文句子中選出正確單字'},
+  {id:'listen', icon:'🎧', name:'聽力選擇', desc:'聽發音，選出正確的中文意思'},
+  {id:'order', icon:'🧠', name:'句子排序', desc:'把打亂的句子排回正確順序'}
+];
+function renderGameMenu(){
+  const el = document.getElementById('gameMenu');
+  el.innerHTML = '';
+  GAME_DEFS.forEach(g => {
+    const best = state.bestScores[g.id];
+    const tile = document.createElement('button');
+    tile.className = 'game-tile';
+    tile.innerHTML = `<div class="gicon">${g.icon}</div><div class="gname">${g.name}</div><div class="gdesc">${g.desc}</div>${best?`<div class="gbest">最佳成績：${best}</div>`:''}`;
+    tile.onclick = () => startGame(g.id);
+    el.appendChild(tile);
+  });
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function pickRandom(arr, n){ return shuffle(arr).slice(0, n); }
+
+function startGame(id){
+  document.getElementById('gameMenuCard').style.display = 'none';
+  const area = document.getElementById('gameArea');
+  area.style.display = 'block';
+  currentGame = id;
+  if(id === 'match') renderMatchGame();
+  if(id === 'fill') renderFillGame();
+  if(id === 'listen') renderListenGame();
+  if(id === 'order') renderOrderGame();
+}
+function exitGame(){
+  document.getElementById('gameMenuCard').style.display = 'block';
+  document.getElementById('gameArea').style.display = 'none';
+  document.getElementById('gameArea').innerHTML = '';
+  renderGameMenu();
+}
+function gameHeader(title){
+  return `<div class="controls-row" style="justify-content:space-between;">
+    <h2 class="h" style="margin:0;">${title}</h2>
+    <button class="btn secondary small" onclick="exitGame()">← 返回關卡選單</button>
+  </div>`;
+}
+
+/* Game 1: matching */
+let matchState = {};
+function renderMatchGame(){
+  const words = pickRandom(VOCAB.map((v,i)=>i), 8);
+  const cards = [];
+  words.forEach(i => {
+    cards.push({key:i, type:'w', text:VOCAB[i].w});
+    cards.push({key:i, type:'z', text:VOCAB[i].zh});
+  });
+  matchState = { cards: shuffle(cards), flipped: [], matched: [], tries: 0 };
+  const area = document.getElementById('gameArea');
+  area.innerHTML = gameHeader('單字配對') + `<p class="p">找出英文單字和中文意思的配對，翻越少次越厲害。</p><div class="match-grid" id="matchGrid"></div>`;
+  renderMatchGrid();
+}
+function renderMatchGrid(){
+  const grid = document.getElementById('matchGrid');
+  grid.innerHTML = '';
+  matchState.cards.forEach((c, idx) => {
+    const isFlipped = matchState.flipped.includes(idx);
+    const isMatched = matchState.matched.includes(idx);
+    const div = document.createElement('div');
+    div.className = 'match-card' + (isFlipped?' flipped':'') + (isMatched?' matched':'');
+    div.textContent = (isFlipped || isMatched) ? c.text : '?';
+    if(!isMatched) div.onclick = () => flipMatch(idx);
+    grid.appendChild(div);
+  });
+}
+function flipMatch(idx){
+  if(matchState.flipped.includes(idx) || matchState.flipped.length >= 2) return;
+  matchState.flipped.push(idx);
+  renderMatchGrid();
+  if(matchState.flipped.length === 2){
+    matchState.tries++;
+    const [a,b] = matchState.flipped;
+    const ca = matchState.cards[a], cb = matchState.cards[b];
+    if(ca.key === cb.key && ca.type !== cb.type){
+      setTimeout(()=>{
+        matchState.matched.push(a,b);
+        matchState.flipped = [];
+        renderMatchGrid();
+        if(matchState.matched.length === matchState.cards.length){
+          finishGame('match', matchState.tries + ' 次翻牌完成', 10);
+        }
+      }, 500);
+    } else {
+      setTimeout(()=>{ matchState.flipped = []; renderMatchGrid(); }, 800);
+    }
+  }
+}
+
+/* Game 2: fill in the blank */
+let fillState = {};
+function buildFillQuestions(){
+  const pairs = TEXT_LINES.map((l,i)=>({line:l, idx:i}))
+    .map(item => {
+      const found = VOCAB.filter(v => item.line.en.toLowerCase().includes(v.w.toLowerCase()));
+      return found.length ? {line:item.line, vocab:found[0]} : null;
+    }).filter(Boolean);
+  const chosen = pickRandom(pairs, Math.min(8, pairs.length));
+  return chosen.map(item => {
+    const answer = item.vocab.w;
+    const blanked = item.line.en.replace(new RegExp(answer, 'i'), '_____');
+    const distractors = pickRandom(VOCAB.filter(v=>v.w!==answer), 3).map(v=>v.w);
+    return { q: blanked, zh: item.line.zh, answer, options: shuffle([answer, ...distractors]) };
+  });
+}
+function renderFillGame(){
+  fillState = { qs: buildFillQuestions(), i:0, correct:0 };
+  showFillQ();
+}
+function showFillQ(){
+  const area = document.getElementById('gameArea');
+  const q = fillState.qs[fillState.i];
+  area.innerHTML = gameHeader('填空挑戰') +
+    `<div class="quiz-progress">第 ${fillState.i+1} / ${fillState.qs.length} 題</div>
+     <div class="quiz-q">${q.q}</div>
+     <p class="p" style="margin-top:-8px;">${q.zh}</p>
+     <div class="quiz-opts" id="fillOpts"></div>`;
+  const opts = document.getElementById('fillOpts');
+  q.options.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = opt;
+    b.onclick = () => answerFill(opt, q.answer, b);
+    opts.appendChild(b);
+  });
+}
+function answerFill(opt, answer, btn){
+  document.querySelectorAll('#fillOpts .opt-btn').forEach(b=>{
+    b.disabled = true;
+    if(b.textContent === answer) b.classList.add('correct');
+    else if(b === btn) b.classList.add('wrong');
+  });
+  if(opt === answer) fillState.correct++;
+  setTimeout(()=>{
+    fillState.i++;
+    if(fillState.i < fillState.qs.length) showFillQ();
+    else finishGame('fill', fillState.correct + '/' + fillState.qs.length + ' 答對', fillState.correct);
+  }, 900);
+}
+
+/* Game 3: listening */
+let listenState = {};
+function renderListenGame(){
+  const chosen = pickRandom(VOCAB.map((v,i)=>i), Math.min(8, VOCAB.length));
+  listenState = { order: chosen, i:0, correct:0 };
+  showListenQ();
+}
+function showListenQ(){
+  const area = document.getElementById('gameArea');
+  const vi = listenState.order[listenState.i];
+  const v = VOCAB[vi];
+  const distractors = pickRandom(VOCAB.filter((x,idx)=>idx!==vi), 3).map(x=>x.zh);
+  const options = shuffle([v.zh, ...distractors]);
+  area.innerHTML = gameHeader('聽力選擇') +
+    `<div class="quiz-progress">第 ${listenState.i+1} / ${listenState.order.length} 題</div>
+     <div class="quiz-q" style="text-align:center;">
+       <button class="btn" onclick="speak('${v.w.replace(/'/g,"\\'")}', 0.85)">🔊 再聽一次</button>
+     </div>
+     <div class="quiz-opts" id="listenOpts"></div>`;
+  speak(v.w, 0.85);
+  const opts = document.getElementById('listenOpts');
+  options.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = opt;
+    b.onclick = () => answerListen(opt, v.zh, b);
+    opts.appendChild(b);
+  });
+}
+function answerListen(opt, answer, btn){
+  document.querySelectorAll('#listenOpts .opt-btn').forEach(b=>{
+    b.disabled = true;
+    if(b.textContent === answer) b.classList.add('correct');
+    else if(b === btn) b.classList.add('wrong');
+  });
+  if(opt === answer) listenState.correct++;
+  setTimeout(()=>{
+    listenState.i++;
+    if(listenState.i < listenState.order.length) showListenQ();
+    else finishGame('listen', listenState.correct + '/' + listenState.order.length + ' 答對', listenState.correct);
+  }, 900);
+}
+
+/* Game 4: sentence ordering */
+let orderState = {};
+function renderOrderGame(){
+  const startIdx = pickRandom([0,4,10,14].filter(i=>i+5<=TEXT_LINES.length), 1)[0] || 0;
+  const segment = TEXT_LINES.slice(startIdx, startIdx+5).map((l,i)=>({text:l.en, correctPos:i}));
+  orderState = { correct: segment, current: shuffle(segment) };
+  renderOrderList();
+}
+function renderOrderList(){
+  const area = document.getElementById('gameArea');
+  area.innerHTML = gameHeader('句子排序') +
+    `<p class="p">用上下箭頭排出正確的故事順序，排好按「檢查答案」。</p>
+     <div class="order-list" id="orderList"></div>
+     <div class="controls-row" style="margin-top:14px;"><button class="btn" onclick="checkOrder()">檢查答案</button></div>`;
+  const list = document.getElementById('orderList');
+  list.innerHTML = '';
+  orderState.current.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    div.innerHTML = `<div class="updown">
+        <button onclick="moveOrder(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button onclick="moveOrder(${i},1)" ${i===orderState.current.length-1?'disabled':''}>▼</button>
+      </div><div>${item.text}</div>`;
+    list.appendChild(div);
+  });
+}
+function moveOrder(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= orderState.current.length) return;
+  [orderState.current[i], orderState.current[j]] = [orderState.current[j], orderState.current[i]];
+  renderOrderList();
+}
+function checkOrder(){
+  let correctCount = 0;
+  const items = document.querySelectorAll('#orderList .order-item');
+  orderState.current.forEach((item, i) => {
+    const ok = item.correctPos === i;
+    if(ok){ correctCount++; items[i].classList.add('correct'); }
+    else items[i].classList.remove('correct');
+  });
+  if(correctCount === orderState.current.length){
+    setTimeout(()=>finishGame('order', '一次排對！', 8), 500);
+  } else {
+    showToast(correctCount + ' / ' + orderState.current.length + ' 句順序正確，再試試看');
+  }
+}
+
+function finishGame(gameId, scoreLabel, points){
+  addPoints(points);
+  markToday();
+  const prevBest = state.bestScores[gameId];
+  if(!prevBest || points > 0) state.bestScores[gameId] = scoreLabel;
+  saveState();
+  const area = document.getElementById('gameArea');
+  area.innerHTML = gameHeader(GAME_DEFS.find(g=>g.id===gameId).name) +
+    `<div class="result-banner">
+       <div class="score">${scoreLabel}</div>
+       <p>做得好！+${points} 分</p>
+       <button class="btn" onclick="startGame('${gameId}')">再玩一次</button>
+       <button class="btn secondary" onclick="exitGame()" style="margin-left:8px;">回關卡選單</button>
+     </div>`;
+  renderBadges();
+}
+
+function renderBadges(){
+  const el = document.getElementById('badgesGrid');
+  el.innerHTML = '';
+  BADGES.forEach(b => {
+    const unlocked = state.badges.includes(b.id);
+    const div = document.createElement('div');
+    div.className = 'badge' + (unlocked ? ' unlocked' : '');
+    div.innerHTML = `<span class="bicon">${b.icon}</span><div class="bname">${b.name}</div><div class="bdesc">${b.desc}</div>`;
+    el.appendChild(div);
+  });
+}
+
+function renderAll(){
+  renderStats();
+  renderStarmap();
+  renderLines();
+  renderVocab();
+  renderGameMenu();
+  renderBadges();
+  renderLatestRecCard();
+  const nextDay = Math.min(sortedDates().length + 1, 30);
+  openDayDetail(nextDay);
+}
+
+loadState();
+</script>
+</body>
+</html>
