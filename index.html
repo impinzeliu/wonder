@@ -932,7 +932,8 @@ function toggleRecording(day, idx, label, lineIdx){
       mediaRecorder = null;
       stream.getTracks().forEach(t => t.stop());
     };
-    rec.start();
+    rec.start(1000); // request a data chunk every 1s — works around a WebKit/iOS bug where
+                      // start() with no timeslice can produce a near-empty blob on stop()
     setRecButtonState(day, idx, true, lineIdx);
     setRecStatus(day, idx, '錄音中…（再按一次可停止，最長 3 分鐘）', false);
     setTimeout(() => {
@@ -974,6 +975,11 @@ function setRecButtonState(day, idx, recording, lineIdx){
 
 function finishRecording(day, idx, label, blob, lineIdx){
   showToast('處理錄音中…');
+  if(blob.size < 3000){
+    showToast('沒有錄到聲音（檔案幾乎是空的），請確認麥克風有正常收音，並錄久一點再試一次');
+    setRecStatus(day, idx, '這次沒有錄到聲音，請重新錄一次，錄的時候對著麥克風清楚朗讀。', true);
+    return;
+  }
   const reader = new FileReader();
   reader.onloadend = async () => {
     const dataUrl = reader.result;
