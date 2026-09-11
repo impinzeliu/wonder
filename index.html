@@ -898,12 +898,19 @@ function toggleRecording(day, idx, label, lineIdx){
       else if(MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
     }
     let rec;
+    const LOW_BITRATE = 24000; // ~24kbps, plenty for clear speech, keeps files small
     try{
-      rec = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+      const opts = {audioBitsPerSecond: LOW_BITRATE};
+      if(mimeType) opts.mimeType = mimeType;
+      rec = new MediaRecorder(stream, opts);
     }catch(constructErr){
-      stream.getTracks().forEach(t => t.stop());
-      showToast('這台裝置不支援目前的錄音格式，建議更新瀏覽器或改用電腦錄音');
-      return;
+      try{
+        rec = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+      }catch(constructErr2){
+        stream.getTracks().forEach(t => t.stop());
+        showToast('這台裝置不支援目前的錄音格式，建議更新瀏覽器或改用電腦錄音');
+        return;
+      }
     }
     mediaRecorder = rec;
     activeRecKey = key;
@@ -927,7 +934,13 @@ function toggleRecording(day, idx, label, lineIdx){
     };
     rec.start();
     setRecButtonState(day, idx, true, lineIdx);
-    setRecStatus(day, idx, '錄音中…（再按一次可停止）', false);
+    setRecStatus(day, idx, '錄音中…（再按一次可停止，最長 3 分鐘）', false);
+    setTimeout(() => {
+      if(mediaRecorder === rec && rec.state !== 'inactive'){
+        showToast('已達最長錄音時間（3 分鐘），自動停止並儲存');
+        try{ rec.stop(); }catch(e){}
+      }
+    }, 180000);
   }).catch(err => {
     const name = err && err.name ? err.name : '未知錯誤';
     const detail = err && err.message ? err.message : '';
@@ -964,6 +977,7 @@ function finishRecording(day, idx, label, blob, lineIdx){
   const reader = new FileReader();
   reader.onloadend = async () => {
     const dataUrl = reader.result;
+    const approxKB = Math.round((dataUrl.length * 0.75) / 1024);
     const record = { day, taskIdx: idx, label, dataUrl, savedAt: new Date().toISOString() };
     try{
       await window.storage.set('wonder-last-recording', JSON.stringify(record), false);
@@ -975,9 +989,9 @@ function finishRecording(day, idx, label, blob, lineIdx){
       markToday();
       saveState();
       checkBadges();
-      showToast('錄音完成，已儲存！');
+      showToast('錄音完成，已儲存！（約 ' + approxKB + ' KB）');
     }catch(e){
-      showToast('錄音檔案太大，無法儲存，請縮短錄音長度再試一次');
+      showToast('錄音檔案太大（約 ' + approxKB + ' KB），無法儲存，請錄短一點（建議 1 分鐘內）再試一次');
     }
     if(selectedDay === day) openDayDetail(day);
     if(typeof lineIdx === 'number') renderLineRecStatus(lineIdx);
