@@ -533,6 +533,7 @@ let lastRecording = null;
 let mediaRecorder = null;
 let audioChunks = [];
 let activeRecKey = null;
+let micMonitorEl = null;
 let storageOk = true;
 let currentGame = null;
 let ttsVoice = null;
@@ -915,9 +916,21 @@ function toggleRecording(day, idx, label, lineIdx){
     mediaRecorder = rec;
     activeRecKey = key;
     audioChunks = [];
+    // Some iOS/iPadOS WebKit versions silently record silence unless the mic stream
+    // is also attached to a live (muted) <audio> element to keep the audio session active.
+    try{
+      micMonitorEl = document.createElement('audio');
+      micMonitorEl.srcObject = stream;
+      micMonitorEl.muted = true;
+      micMonitorEl.playsInline = true;
+      micMonitorEl.style.display = 'none';
+      document.body.appendChild(micMonitorEl);
+      micMonitorEl.play().catch(()=>{});
+    }catch(monErr){ micMonitorEl = null; }
     rec.ondataavailable = e => { if(e.data && e.data.size > 0) audioChunks.push(e.data); };
     rec.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
+      if(micMonitorEl){ try{ micMonitorEl.pause(); micMonitorEl.srcObject = null; micMonitorEl.remove(); }catch(e){} micMonitorEl = null; }
       const blob = new Blob(audioChunks, {type: rec.mimeType || 'audio/webm'});
       setRecButtonState(day, idx, false, lineIdx);
       setRecStatus(day, idx, '處理中…', false);
@@ -930,6 +943,7 @@ function toggleRecording(day, idx, label, lineIdx){
       setRecButtonState(day, idx, false, lineIdx);
       activeRecKey = null;
       mediaRecorder = null;
+      if(micMonitorEl){ try{ micMonitorEl.pause(); micMonitorEl.srcObject = null; micMonitorEl.remove(); }catch(e){} micMonitorEl = null; }
       stream.getTracks().forEach(t => t.stop());
     };
     rec.start(1000); // request a data chunk every 1s — works around a WebKit/iOS bug where
