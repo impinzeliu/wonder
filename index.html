@@ -562,9 +562,29 @@ function speak(text, rate){
   return u;
 }
 
+// Storage abstraction: window.storage only exists inside Claude's own preview frame.
+// When this page is opened directly (published link / downloaded file) — which is what
+// microphone access actually requires — window.storage is not injected, so fall back
+// to the browser's own localStorage transparently.
+const HAS_WINDOW_STORAGE = (typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function');
+async function storageGet(key, shared){
+  if(HAS_WINDOW_STORAGE){
+    return await window.storage.get(key, shared);
+  }
+  const v = localStorage.getItem(key);
+  return v !== null ? {key, value: v, shared: !!shared} : null;
+}
+async function storageSet(key, value, shared){
+  if(HAS_WINDOW_STORAGE){
+    return await window.storage.set(key, value, shared);
+  }
+  localStorage.setItem(key, value); // throws QuotaExceededError if over ~5-10MB, same shape as window.storage failing
+  return {key, value, shared: !!shared};
+}
+
 async function loadState(){
   try{
-    const res = await window.storage.get('wonder-progress', false);
+    const res = await storageGet('wonder-progress', false);
     if(res && res.value){
       const loaded = JSON.parse(res.value);
       state = Object.assign(state, loaded);
@@ -573,7 +593,7 @@ async function loadState(){
     storageOk = true;
   }
   try{
-    const rec = await window.storage.get('wonder-last-recording', false);
+    const rec = await storageGet('wonder-last-recording', false);
     if(rec && rec.value){
       lastRecording = JSON.parse(rec.value);
     }
@@ -584,7 +604,7 @@ async function loadState(){
 }
 async function saveState(){
   try{
-    await window.storage.set('wonder-progress', JSON.stringify(state), false);
+    await storageSet('wonder-progress', JSON.stringify(state), false);
   }catch(e){}
 }
 
@@ -1038,7 +1058,7 @@ function finishRecording(day, idx, label, blob, lineIdx){
       const approxKB = Math.round((dataUrl.length * 0.75) / 1024);
       const record = { day, taskIdx: idx, label, dataUrl, savedAt: new Date().toISOString() };
       try{
-        await window.storage.set('wonder-last-recording', JSON.stringify(record), false);
+        await storageSet('wonder-last-recording', JSON.stringify(record), false);
         lastRecording = record;
         const plan = DAY_PLAN.find(p => p.day === day);
         if(!state.dayChecks[day]) state.dayChecks[day] = plan.tasks.map(()=>false);
