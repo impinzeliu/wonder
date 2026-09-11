@@ -595,6 +595,14 @@ function showToast(msg){
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>t.classList.remove('show'), 2200);
 }
+window.addEventListener('error', (e) => {
+  showToast('發生錯誤：' + (e && e.message ? e.message : '未知錯誤'));
+});
+window.addEventListener('unhandledrejection', (e) => {
+  const reason = e && e.reason;
+  const msg = (reason && reason.message) ? reason.message : String(reason);
+  showToast('發生錯誤：' + msg);
+});
 
 function addPoints(n){
   state.points += n;
@@ -818,9 +826,13 @@ function goToLineRecord(lineIdx){
 
 function setRecStatus(day, idx, text, isError){
   const el = document.getElementById('recStatus-' + day + '-' + idx);
+  if(el){ el.textContent = text; el.style.color = isError ? 'var(--red)' : ''; }
+}
+function setLineRecMessage(lineIdx, text, isError){
+  if(typeof lineIdx !== 'number') return;
+  const el = document.getElementById('lineRec-' + lineIdx);
   if(!el) return;
-  el.textContent = text;
-  el.style.color = isError ? 'var(--red)' : '';
+  el.innerHTML = `<div style="font-size:12px; margin-top:4px; color:${isError ? 'var(--red)' : 'var(--dim)'};">${text}</div>`;
 }
 
 function runMicTest(){
@@ -929,14 +941,20 @@ function toggleRecording(day, idx, label, lineIdx){
     }catch(monErr){ micMonitorEl = null; }
     rec.ondataavailable = e => { if(e.data && e.data.size > 0) audioChunks.push(e.data); };
     rec.onstop = () => {
-      stream.getTracks().forEach(t => t.stop());
-      if(micMonitorEl){ try{ micMonitorEl.pause(); micMonitorEl.srcObject = null; micMonitorEl.remove(); }catch(e){} micMonitorEl = null; }
-      const blob = new Blob(audioChunks, {type: rec.mimeType || 'audio/webm'});
+      try{ stream.getTracks().forEach(t => t.stop()); }catch(e){}
+      try{ if(micMonitorEl){ micMonitorEl.pause(); micMonitorEl.srcObject = null; micMonitorEl.remove(); } }catch(e){}
+      micMonitorEl = null;
       setRecButtonState(day, idx, false, lineIdx);
       setRecStatus(day, idx, '處理中…', false);
       activeRecKey = null;
       mediaRecorder = null;
-      finishRecording(day, idx, label, blob, lineIdx);
+      try{
+        const blob = new Blob(audioChunks, {type: rec.mimeType || 'audio/webm'});
+        finishRecording(day, idx, label, blob, lineIdx);
+      }catch(e){
+        showToast('錄音處理失敗：' + (e && e.message ? e.message : '未知錯誤'));
+        setRecStatus(day, idx, '錄音處理失敗，請重新整理頁面再試一次。', true);
+      }
     };
     rec.onerror = () => {
       showToast('錄音發生錯誤，請再試一次');
@@ -988,33 +1006,62 @@ function setRecButtonState(day, idx, recording, lineIdx){
 }
 
 function finishRecording(day, idx, label, blob, lineIdx){
-  showToast('處理錄音中…');
+  if(!blob || blob.size === 0){
+    showToast('沒有錄到聲音（檔案是空的），請確認麥克風有正常收音，並錄久一點再試一次');
+    setRecStatus(day, idx, '這次沒有錄到聲音，請重新錄一次。', true);
+    setLineRecMessage(lineIdx, '✗ 這次沒有錄到聲音，請重新錄一次。', true);
+    return;
+  }
   if(blob.size < 3000){
     showToast('沒有錄到聲音（檔案幾乎是空的），請確認麥克風有正常收音，並錄久一點再試一次');
     setRecStatus(day, idx, '這次沒有錄到聲音，請重新錄一次，錄的時候對著麥克風清楚朗讀。', true);
+    setLineRecMessage(lineIdx, '✗ 這次幾乎沒有錄到聲音，請重新錄一次，並清楚對著麥克風朗讀。', true);
     return;
   }
+  showToast('處理錄音中…');
+  setLineRecMessage(lineIdx, '處理中…', false);
   const reader = new FileReader();
+  reader.onerror = () => {
+    showToast('讀取錄音資料失敗，請重新整理頁面再錄一次');
+    setRecStatus(day, idx, '讀取錄音資料失敗，請重新整理頁面再試一次。', true);
+    setLineRecMessage(lineIdx, '✗ 讀取錄音資料失敗，請重新整理頁面再試一次。', true);
+  };
   reader.onloadend = async () => {
-    const dataUrl = reader.result;
-    const approxKB = Math.round((dataUrl.length * 0.75) / 1024);
-    const record = { day, taskIdx: idx, label, dataUrl, savedAt: new Date().toISOString() };
+    let success = false;
     try{
-      await window.storage.set('wonder-last-recording', JSON.stringify(record), false);
-      lastRecording = record;
-      const plan = DAY_PLAN.find(p => p.day === day);
-      if(!state.dayChecks[day]) state.dayChecks[day] = plan.tasks.map(()=>false);
-      state.dayChecks[day][idx] = true;
-      addPoints(3);
-      markToday();
-      saveState();
-      checkBadges();
-      showToast('錄音完成，已儲存！（約 ' + approxKB + ' KB）');
-    }catch(e){
-      showToast('錄音檔案太大（約 ' + approxKB + ' KB），無法儲存，請錄短一點（建議 1 分鐘內）再試一次');
+      if(!reader.result){
+        showToast('讀取錄音資料失敗（內容是空的），請再試一次');
+        setLineRecMessage(lineIdx, '✗ 讀取錄音資料失敗（內容是空的），請再試一次。', true);
+        return;
+      }
+      const dataUrl = reader.result;
+      const approxKB = Math.round((dataUrl.length * 0.75) / 1024);
+      const record = { day, taskIdx: idx, label, dataUrl, savedAt: new Date().toISOString() };
+      try{
+        await window.storage.set('wonder-last-recording', JSON.stringify(record), false);
+        lastRecording = record;
+        const plan = DAY_PLAN.find(p => p.day === day);
+        if(!state.dayChecks[day]) state.dayChecks[day] = plan.tasks.map(()=>false);
+        state.dayChecks[day][idx] = true;
+        addPoints(3);
+        markToday();
+        saveState();
+        checkBadges();
+        showToast('錄音完成，已儲存！（約 ' + approxKB + ' KB）');
+        success = true;
+      }catch(storageErr){
+        const errMsg = storageErr && storageErr.message ? storageErr.message : '';
+        showToast('錄音檔案太大（約 ' + approxKB + ' KB），無法儲存' + (errMsg ? '：' + errMsg : '') + '，請錄短一點再試一次');
+        setRecStatus(day, idx, '儲存失敗（約 ' + approxKB + ' KB）：' + (errMsg || '請縮短錄音長度再試一次'), true);
+        setLineRecMessage(lineIdx, '✗ 儲存失敗（約 ' + approxKB + ' KB）：' + (errMsg || '請縮短錄音長度再試一次'), true);
+      }
+    }catch(outerErr){
+      showToast('處理錄音時發生未預期的錯誤，請重新整理頁面再試一次');
+      setRecStatus(day, idx, '處理錄音時發生錯誤：' + (outerErr && outerErr.message ? outerErr.message : '未知錯誤'), true);
+      setLineRecMessage(lineIdx, '✗ 處理錄音時發生錯誤：' + (outerErr && outerErr.message ? outerErr.message : '未知錯誤'), true);
     }
     if(selectedDay === day) openDayDetail(day);
-    if(typeof lineIdx === 'number') renderLineRecStatus(lineIdx);
+    if(success && typeof lineIdx === 'number') renderLineRecStatus(lineIdx);
     renderLatestRecCard();
   };
   reader.readAsDataURL(blob);
