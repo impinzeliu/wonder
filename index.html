@@ -857,12 +857,23 @@ function runMicTest(){
 
 function toggleRecording(day, idx, label, lineIdx){
   const key = day + '-' + idx;
-  if(activeRecKey === key && mediaRecorder && mediaRecorder.state === 'recording'){
-    mediaRecorder.stop();
-    return;
-  }
-  if(activeRecKey && activeRecKey !== key){
-    showToast('請先停止目前正在進行的錄音');
+  // A recorder is already running (for this key or another) — try to stop it.
+  if(mediaRecorder && mediaRecorder.state && mediaRecorder.state !== 'inactive'){
+    if(activeRecKey === key){
+      try{
+        mediaRecorder.stop();
+        setTimeout(() => {
+          if(mediaRecorder && activeRecKey === key){
+            showToast('錄音停止逾時，請重新整理頁面後再試一次');
+            setRecButtonState(day, idx, false, lineIdx);
+            activeRecKey = null;
+            mediaRecorder = null;
+          }
+        }, 4000);
+      }catch(e){ showToast('停止錄音時發生錯誤，請重新整理頁面再試'); }
+    } else {
+      showToast('請先停止目前正在進行的錄音');
+    }
     return;
   }
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
@@ -886,18 +897,37 @@ function toggleRecording(day, idx, label, lineIdx){
       if(MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
       else if(MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
     }
-    mediaRecorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
-    activeRecKey = key;
-    mediaRecorder.ondataavailable = e => { if(e.data && e.data.size > 0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = () => {
+    let rec;
+    try{
+      rec = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
+    }catch(constructErr){
       stream.getTracks().forEach(t => t.stop());
-      const blob = new Blob(audioChunks, {type: mediaRecorder.mimeType || 'audio/webm'});
+      showToast('這台裝置不支援目前的錄音格式，建議更新瀏覽器或改用電腦錄音');
+      return;
+    }
+    mediaRecorder = rec;
+    activeRecKey = key;
+    audioChunks = [];
+    rec.ondataavailable = e => { if(e.data && e.data.size > 0) audioChunks.push(e.data); };
+    rec.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(audioChunks, {type: rec.mimeType || 'audio/webm'});
+      setRecButtonState(day, idx, false, lineIdx);
+      setRecStatus(day, idx, '處理中…', false);
       activeRecKey = null;
+      mediaRecorder = null;
       finishRecording(day, idx, label, blob, lineIdx);
     };
-    mediaRecorder.start();
+    rec.onerror = () => {
+      showToast('錄音發生錯誤，請再試一次');
+      setRecButtonState(day, idx, false, lineIdx);
+      activeRecKey = null;
+      mediaRecorder = null;
+      stream.getTracks().forEach(t => t.stop());
+    };
+    rec.start();
     setRecButtonState(day, idx, true, lineIdx);
-    setRecStatus(day, idx, '錄音中…', false);
+    setRecStatus(day, idx, '錄音中…（再按一次可停止）', false);
   }).catch(err => {
     const name = err && err.name ? err.name : '未知錯誤';
     const detail = err && err.message ? err.message : '';
