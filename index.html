@@ -388,25 +388,33 @@
 <script>
 const TEXT_LINES = [
   {en:"I walked into school that morning trying to look normal.", zh:"那天早上我走進學校，努力表現得很正常。"},
-  {en:"That was what I had learned to do—", zh:"這是我學會的方法──"},
-  {en:"act like I didn't notice the stares, or the whispers, or the quick glances away.", zh:"假裝沒注意到那些盯著看、竊竊私語，或匆匆撇開的目光。"},
-  {en:"But the truth is, you always notice. Even when you pretend you don't.", zh:"但事實是，你永遠都會注意到，即使你假裝沒有。"},
-  {en:"In the hallway, I heard my name. I didn't turn around. I just kept walking.", zh:"在走廊上，我聽到有人叫我的名字。我沒有回頭，只是繼續走。"},
-  {en:"\u201cIgnore it,\u201d I told myself. \u201cJust get through the day.\u201d", zh:"「不要理它，」我告訴自己，「先撐過今天再說。」"},
+  {en:"That was what I had learned to do", zh:"這是我學會的方法"},
+  {en:"\u2014act like I didn't notice the stares, or the whispers,", zh:"──假裝沒注意到那些盯著看、竊竊私語，"},
+  {en:"or the quick glances away.", zh:"或匆匆撇開的目光。"},
+  {en:"But the truth is, you always notice.", zh:"但事實是，你永遠都會注意到。"},
+  {en:"Even when you pretend you don't.", zh:"即使你假裝沒有。"},
+  {en:"In the hallway, I heard my name.", zh:"在走廊上，我聽到有人叫我的名字。"},
+  {en:"I didn't turn around. I just kept walking.", zh:"我沒有回頭，只是繼續走。"},
+  {en:"\u201cIgnore it,\u201d I told myself.", zh:"「不要理它，」我告訴自己。"},
+  {en:"\u201cJust get through the day.\u201d", zh:"「先撐過今天再說。」"},
   {en:"But ignoring it didn't make it disappear.", zh:"但不理它，並不會讓這一切消失。"},
   {en:"At lunch, I sat down carefully at the table.", zh:"午餐時間，我小心翼翼地坐到餐桌旁。"},
   {en:"For a moment, everything felt normal.", zh:"有那麼一瞬間，一切感覺很正常。"},
-  {en:"Then someone stood up. One by one, others followed.", zh:"接著有人站了起來，其他人也一個接一個跟著站起來。"},
+  {en:"Then someone stood up.", zh:"接著有人站了起來。"},
+  {en:"One by one, others followed.", zh:"其他人也一個接一個跟著站起來。"},
   {en:"No one said anything. No one needed to.", zh:"沒有人說一句話，也不需要說。"},
-  {en:"I was left sitting there, staring at my tray. My appetite was gone.", zh:"我一個人坐在那裡，盯著餐盤，一點食慾都沒有了。"},
+  {en:"I was left sitting there, staring at my tray.", zh:"我一個人坐在那裡，盯著餐盤。"},
+  {en:"My appetite was gone.", zh:"一點食慾都沒有了。"},
   {en:"I wondered what it would feel like to be invisible.", zh:"我在想，變成隱形人會是什麼感覺。"},
   {en:"No stares. No whispers. No questions.", zh:"沒有盯著看，沒有竊竊私語，也沒有問題。"},
   {en:"Maybe invisible would be easier.", zh:"或許隱形會比較輕鬆。"},
   {en:"But then I heard my mother's voice in my head.", zh:"但這時我腦中響起媽媽的聲音。"},
-  {en:"\u201cYou are not invisible,\u201d she always said. \u201cYou are stronger than you think.\u201d", zh:"「你不是隱形人，」她總是這麼說，「你比自己想的還要堅強。」"},
+  {en:"\u201cYou are not invisible,\u201d she always said.", zh:"「你不是隱形人，」她總是這麼說。"},
+  {en:"\u201cYou are stronger than you think.\u201d", zh:"「你比自己想的還要堅強。」"},
   {en:"Strong. I wasn't sure I felt strong.", zh:"堅強。我不確定自己是不是真的感覺堅強。"},
   {en:"Still, I picked up my fork. I forced myself to eat.", zh:"儘管如此，我還是拿起了叉子，強迫自己吃了下去。"},
-  {en:"Because even if I couldn't change how people saw me, I could choose not to disappear.", zh:"因為即使我無法改變別人看我的眼光，我還是可以選擇不消失。"},
+  {en:"Because even if I couldn't change how people saw me,", zh:"因為即使我無法改變別人看我的眼光，"},
+  {en:"I could choose not to disappear.", zh:"我還是可以選擇不消失。"},
   {en:"And somehow, that felt like a small kind of victory.", zh:"而不知怎麼地，那感覺像是一種小小的勝利。"}
 ];
 
@@ -449,6 +457,15 @@ function findVocabInLine(i){
 }
 function buildDayPlan(){
   const plan = [];
+  plan.push({
+    day: 1,
+    theme: '\u8a8d\u8b58\u9019\u7bc7\u6587\u7ae0\uff1aWonder',
+    tasks: [
+      {text:'\u8a8d\u8b58\u6587\u7ae0\u51fa\u8655\uff1aWonder by R.J. Palacio\uff08\u6539\u5beb\u7248\uff09', type:'check'},
+      {text:'\u8acb\u5bb6\u9577\u6216\u8001\u5e2b\u7c21\u55ae\u8b1b\u89e3\u6545\u4e8b\u80cc\u666f\uff08\u4e3b\u89d2\u5967\u5409\u7684\u6545\u4e8b\uff09', type:'check'},
+      {text:'\u9810\u544a\uff1a\u5f9e\u660e\u5929\u958b\u59cb\uff0c\u6bcf\u5929\u7df4\u7fd2\u4e00\u53e5\u8ab2\u6587', type:'check'}
+    ]
+  });
   TEXT_LINES.forEach((line,i)=>{
     const found = findVocabInLine(i);
     const tasks = [];
@@ -461,57 +478,12 @@ function buildDayPlan(){
       tasks.push({text:'\u5b8c\u6210\u4eca\u65e5\u55ae\u5b57\u5c0f\u8003', type:'quiz'});
     }
     plan.push({
-      day:i+1,
+      day: i+2,
       theme:'\u7b2c ' + (i+1) + ' \u53e5\uff1a' + line.zh,
       vocab: found.map(o=>o.vi),
       line: i,
       tasks
     });
-  });
-  const halfPoint = Math.ceil(TEXT_LINES.length / 2);
-  const reviewDaysDefs = [
-    {theme:'\u5168\u6587\u6717\u8b80\u7e3d\u8907\u7fd2', tasks:[
-      {text:'\u7528\u6162\u901f\u64ad\u653e\u5168\u6587\u4e00\u6b21\uff0c\u908a\u807d\u908a\u8ddf\u8b80', type:'check'},
-      {text:'\u9304\u4e0b\u4e00\u6b21\u5b8c\u6574\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
-    ]},
-    {theme:'\u55ae\u5b57\u7e3d\u8907\u7fd2', tasks:[
-      {text:'\u628a\u6240\u6709\u55ae\u5b57\u5361\u90fd\u7ffb\u904e\u4e00\u6b21', type:'check'},
-      {text:'\u73a9\u4e00\u6b21\u300c\u55ae\u5b57\u914d\u5c0d\u300d\u904a\u6232', type:'check'},
-      {text:'\u73a9\u4e00\u6b21\u300c\u807d\u529b\u9078\u64c7\u300d\u904a\u6232', type:'check'}
-    ]},
-    {theme:'\u586b\u7a7a\u8207\u6392\u5e8f\u6311\u6230', tasks:[
-      {text:'\u73a9\u4e00\u6b21\u300c\u586b\u7a7a\u6311\u6230\u300d\u904a\u6232\uff0c\u76ee\u6a19 6/8 \u4ee5\u4e0a', type:'check'},
-      {text:'\u73a9\u4e00\u6b21\u300c\u53e5\u5b50\u6392\u5e8f\u300d\u904a\u6232', type:'check'}
-    ]},
-    {theme:'\u60c5\u7dd2\u8d77\u4f0f\u7df4\u7fd2', tasks:[
-      {text:'\u7df4\u7fd2\u8a9e\u6c23\u6700\u4f4e\u843d\u7684\u53e5\u5b50\uff0c\u5531\u51fa\u5931\u843d\u611f', type:'check'},
-      {text:'\u7df4\u7fd2\u8f49\u6298\u7684\u53e5\u5b50\uff08\u5abd\u5abd\u7684\u8a71\uff09\uff0c\u5531\u51fa\u529b\u91cf\u611f', type:'check'}
-    ]},
-    {theme:'\u4e2d\u901f\u5168\u6587\u6717\u8b80', tasks:[
-      {text:'\u8a9e\u901f\u8abf\u5230 0.9\uff0c\u64ad\u653e\u5168\u6587\u4e26\u8ddf\u8b80\u4e00\u6b21', type:'check'},
-      {text:'\u9304\u4e0b\u9019\u6b21\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
-    ]},
-    {theme:'\u5c0d\u93e1\u5b50\u7df4\u7fd2\uff0b\u5ff5\u7d66\u5bb6\u4eba\u807d', tasks:[
-      {text:'\u5c0d\u8457\u93e1\u5b50\u6717\u8b80\u5168\u6587\u4e00\u6b21\uff0c\u6ce8\u610f\u8868\u60c5\u548c\u773c\u795e', type:'check'},
-      {text:'\u5192\u8b80\u7d66\u5bb6\u4eba\u807d\uff0c\u8acb\u4ed6\u5011\u7d66\u4e00\u500b\u5efa\u8b70', type:'check'},
-      {text:'\u9304\u4e0b\u9019\u6b21\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
-    ]},
-    {theme:'\u6b63\u5e38\u8a9e\u901f\u6717\u8b80', tasks:[
-      {text:'\u8a9e\u901f\u8abf\u5230 1.0\uff0c\u64ad\u653e\u5168\u6587\u4e26\u8ddf\u8b80\u4e00\u6b21', type:'check'},
-      {text:'\u9304\u4e0b\u9019\u6b21\u6717\u8b80\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
-    ]},
-    {theme:'\u6a21\u64ec\u6bd4\u8cfd I', tasks:[
-      {text:'\u8acb\u5bb6\u4eba\u7576\u8a55\u5be9\uff0c\u5b8c\u6574\u8868\u6f14\u4e00\u6b21\u6717\u8b80', type:'check'},
-      {text:'\u9304\u4e0b\u9019\u6b21\u8868\u6f14\uff0c\u4e26\u56de\u653e\u6aa2\u67e5', type:'record', line:'full'}
-    ]},
-    {theme:'\u6a21\u64ec\u6bd4\u8cfd II\uff08\u4e0a\u53f0\u524d\u6700\u5f8c\u4e00\u7df4\uff09', tasks:[
-      {text:'\u5c0d\u81ea\u5df1\u8aaa\uff1a\u6211\u5df2\u7d93\u6e96\u5099\u597d\u4e86\uff01', type:'check'},
-      {text:'\u9304\u4e0b\u6700\u5f8c\u4e00\u6b21\u6717\u8b80\uff0c\u7559\u4f5c\u7d00\u5ff5\u8207\u56de\u9867', type:'record', line:'full'}
-    ]}
-  ];
-  const startDay = plan.length + 1;
-  reviewDaysDefs.forEach((d, idx) => {
-    plan.push(Object.assign({day: startDay + idx}, d));
   });
   return plan;
 }
