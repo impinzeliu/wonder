@@ -141,6 +141,12 @@
   .latest-rec-card .lr-label{ font-size:12.5px; color:var(--dim); margin-bottom:6px; }
 
   /* listen 3x task */
+  .listen-sentence{
+    background:var(--bg-deep); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin-top:8px;
+  }
+  .listen-sentence-en{ font-family:'Fraunces', serif; font-size:16px; color:var(--cream); line-height:1.5; }
+  .listen-sentence-zh{ font-size:12.5px; color:var(--dim); margin-top:4px; }
   .listen-steps{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
   .listen-btn{
     font-family:inherit; font-weight:800; font-size:12.5px; padding:8px 14px; border-radius:999px;
@@ -741,9 +747,17 @@ function renderListenTask(day, idx, task, checked){
     const disabled = (!ready && !done) || checked ? 'disabled' : '';
     btns += `<button class="${cls}" ${disabled} onclick="playListenStep(${day},${idx},${n})">${done ? '✓ ' : '🔊 '}第 ${n} 次</button>`;
   }
+  const lineIdx = task.line;
+  const sentenceHtml = (typeof lineIdx === 'number' && TEXT_LINES[lineIdx])
+    ? `<div class="listen-sentence">
+        <div class="listen-sentence-en">${TEXT_LINES[lineIdx].en}</div>
+        <div class="listen-sentence-zh">${TEXT_LINES[lineIdx].zh}</div>
+      </div>`
+    : '';
   return `<div class="check-item">
       <div class="check-box ${checked?'checked':''}">${checked?'✓':''}</div>
       <div class="check-label ${checked?'struck':''}">${task.text}
+        ${sentenceHtml}
         <div class="listen-steps">${btns}</div>
       </div>
     </div>`;
