@@ -387,6 +387,7 @@
 
 <script>
 const TEXT_LINES = [
+  {en:"Wonder by R.J. Palacio (Adapted Version)", zh:"《奇蹟男孩》改寫版——R.J. 帕拉秋 著"},
   {en:"I walked into school that morning trying to look normal.", zh:"那天早上我走進學校，努力表現得很正常。"},
   {en:"That was what I had learned to do", zh:"這是我學會的方法"},
   {en:"\u2014act like I didn't notice the stares, or the whispers,", zh:"──假裝沒注意到那些盯著看、竊竊私語，"},
@@ -457,15 +458,6 @@ function findVocabInLine(i){
 }
 function buildDayPlan(){
   const plan = [];
-  plan.push({
-    day: 1,
-    theme: '\u8a8d\u8b58\u9019\u7bc7\u6587\u7ae0\uff1aWonder',
-    tasks: [
-      {text:'\u8a8d\u8b58\u6587\u7ae0\u51fa\u8655\uff1aWonder by R.J. Palacio\uff08\u6539\u5beb\u7248\uff09', type:'check'},
-      {text:'\u8acb\u5bb6\u9577\u6216\u8001\u5e2b\u7c21\u55ae\u8b1b\u89e3\u6545\u4e8b\u80cc\u666f\uff08\u4e3b\u89d2\u5967\u5409\u7684\u6545\u4e8b\uff09', type:'check'},
-      {text:'\u9810\u544a\uff1a\u5f9e\u660e\u5929\u958b\u59cb\uff0c\u6bcf\u5929\u7df4\u7fd2\u4e00\u53e5\u8ab2\u6587', type:'check'}
-    ]
-  });
   TEXT_LINES.forEach((line,i)=>{
     const found = findVocabInLine(i);
     const tasks = [];
@@ -477,9 +469,12 @@ function buildDayPlan(){
     if(found.length){
       tasks.push({text:'\u5b8c\u6210\u4eca\u65e5\u55ae\u5b57\u5c0f\u8003', type:'quiz'});
     }
+    const themeLabel = i === 0
+      ? '\u6a19\u984c\u8207\u4f5c\u8005\uff1a' + line.zh
+      : '\u7b2c ' + i + ' \u53e5\uff1a' + line.zh;
     plan.push({
-      day: i+2,
-      theme:'\u7b2c ' + (i+1) + ' \u53e5\uff1a' + line.zh,
+      day: i+1,
+      theme: themeLabel,
       vocab: found.map(o=>o.vi),
       line: i,
       tasks
